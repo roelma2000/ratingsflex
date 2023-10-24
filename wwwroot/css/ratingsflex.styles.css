@@ -1,0 +1,176 @@
+﻿body {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+.navbar {
+    background-color: #ffffff;
+    border-bottom: 1px solid #333;
+}
+
+.navbar-brand img {
+    height: 40px;
+}
+
+.navbar-nav .nav-link {
+    color: #000000;
+    border: 1px solid #000000;
+    border-radius: 5px;
+    padding: 5px 10px;
+    margin: 0 5px;
+    transition: background-color 0.3s, color 0.3s, font-weight 0.3s;
+}
+
+    .navbar-nav .nav-link:hover {
+        background-color: #333 !important;
+        color: #ffffff !important;
+        font-weight: bold !important;
+    }
+
+
+/* Footer Styles */
+.footer {
+    background-color: #ffffff;
+    color: #000000;
+    padding: 15px 0;
+    font-size: 14px;
+    border-top: 1px solid #eaeaea;
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+    .footer a {
+        color: #000000;
+        text-decoration: none;
+    }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+    .footer .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+}
+
+    .footer-logo img {
+        height: 30px;
+        margin-right: 10px;
+    }
+
+    .footer-logo span {
+        font-weight: bold;
+        font-size: 18px;
+    }
+
+.footer-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+
+.footer-links li {
+        margin-right: 20px;
+    }
+
+.footer-links li:last-child {
+            margin-right: 0;
+        }
+
+
+
+.carousel-item {
+    height: 700px;
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+    position: relative;
+}
+
+/* Carousel Styles */
+.carousel-caption {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    background-color: rgba(0, 0, 0, 0.7);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+.rating {
+    font-size: 1.5rem;
+    color: #ccc;
+}
+
+.full-star {
+    color: gold;
+}
+
+.half-star {
+    position: relative;
+    display: inline-block;
+    color: #ccc;
+}
+
+    .half-star::before {
+        content: '★';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 50%;
+        overflow: hidden;
+        color: gold;
+    }
+
+
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    background-color: lightcoral;
+}
+
+/* Registration Form Styles */
+.register-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 70vh;
+    background-color: #f8f9fa;
+}
+
+.register-form {
+    background-color: #ffffff;
+    border: 1px solid #e3e6ef;
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+}
+
+    .register-form h2 {
+        margin-bottom: 20px;
+    }
+
+    .register-form .form-floating {
+        margin-bottom: 9px;
+    }
+
+    .register-form button {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+
+/* Adjustments for smaller screens */
+@media (max-width: 767px) {
+    .register-container {
+        padding: 20px;
+    }
+}
