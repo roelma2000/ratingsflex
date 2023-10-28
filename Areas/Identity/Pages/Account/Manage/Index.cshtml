@@ -1,0 +1,23 @@
+﻿@page
+@model IndexModel
+@{
+
+    @*ViewData["ActivePage"] = ManageNavPages.Index;*@
+    Layout = "~/Areas/Identity/Pages/Account/Manage/_Layout.cshtml";
+    ViewData["Title"] = "Manage your account";
+    ViewData["HideCarousel"] = true;
+
+}
+
+<h3>@ViewData["Title"]</h3>
+
+<div>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+
+    </div>
+</div>
+

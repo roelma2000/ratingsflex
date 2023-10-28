@@ -61,7 +61,7 @@
 }
 
     .footer-logo img {
-        height: 30px;
+        height: 50px;
         margin-right: 10px;
     }
 
@@ -167,6 +167,130 @@
         background-color: #007bff;
         border-color: #007bff;
     }
+
+/* Manage Movies Styles */
+.manage-movies-container {
+    padding: 20px;
+}
+
+.manage-movies-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.manage-movies-filter {
+    display: flex;
+    align-items: center;
+}
+
+.manage-movies-search {
+    margin-left: 20px;
+}
+
+.manage-movies-list {
+    margin-top: 20px;
+}
+
+.manage-movies-item {
+    display: flex;
+    border: 1px solid #e3e6ef;
+    border-radius: 5px;
+    overflow: hidden;
+    margin-bottom: 20px;
+}
+
+    .manage-movies-item img {
+        width: 150px;
+        height: 150px;
+        object-fit: cover;
+    }
+
+.manage-movies-item-content {
+    padding: 10px;
+    flex-grow: 1;
+}
+
+.manage-movies-item-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+    .manage-movies-item-actions a {
+        margin-left: 10px;
+    }
+
+/* Add Movie Form Styles */
+.add-movie-form {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+
+    .add-movie-form h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+
+    .add-movie-form .form-group {
+        margin-bottom: 20px;
+    }
+
+    .add-movie-form label {
+        font-size: 18px;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .add-movie-form input[type="text"],
+    .add-movie-form textarea,
+    .add-movie-form select,
+    .add-movie-form input[type="file"] {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+        border: 1px solid #e0e0e0;
+        border-radius: 4px;
+    }
+
+    .add-movie-form button {
+        padding: 10px 15px;
+        font-size: 16px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .add-movie-form .btn-primary {
+        background-color: #007bff;
+        color: #ffffff;
+        border: none;
+    }
+
+        .add-movie-form .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+    .add-movie-form .btn-secondary {
+        background-color: #6c757d;
+        color: #ffffff;
+        border: none;
+    }
+
+        .add-movie-form .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+.add-movie-title {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
 
 /* Adjustments for smaller screens */
 @media (max-width: 767px) {

@@ -1,0 +1,197 @@
+﻿@model ratingsflex.Areas.Movies.Models.AddMovieViewModel
+
+@{
+    ViewData["Title"] = "Add Movie";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+<h1 class="add-movie-title">Add Movie</h1>
+
+<form id="addMovieForm" asp-controller="Movies" asp-action="AddMovie" method="post" class="add-movie-form">
+    <div class="form-group">
+        <label for="Title">Title</label>
+        <input type="text" id="Title" name="Title" class="form-control" required />
+        <span id="TitleError" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="Description">Description</label>
+        <textarea id="Description" name="Description" class="form-control" required></textarea>
+        <span id="DescriptionError" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="ReleaseTime">Release Date</label>
+        <input type="date" id="ReleaseTime" name="ReleaseTime" class="form-control" required />
+        <span id="ReleaseTimeError" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="Actors">Actors</label>
+        <div id="actors">
+            <input type="text" id="Actors" name="Actors" class="form-control" required />
+        </div>
+        <span id="ActorsError" class="text-danger"></span>
+        <button type="button" id="addActor" class="btn btn-secondary">Add Actor</button>
+    </div>
+    <div class="form-group">
+        <label for="Directors">Directors</label>
+        <div id="directors">
+            <input type="text" id="Directors" name="Directors" class="form-control" required />
+        </div>
+        <span id="DirectorsError" class="text-danger"></span>
+        <button type="button" id="addDirector" class="btn btn-secondary">Add Director</button>
+    </div>
+    <div class="form-group">
+        <label for="Genre">Genre</label>
+        <select id="Genre" name="Genre" class="form-control" required>
+            <option value="Action">Action</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Drama">Drama</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Animation">Animation</option>
+            <option value="Biography">Biography</option>
+            <option value="Crime">Crime</option>
+            <option value="Family">Family</option>
+            <option value="Documentary">Documentary</option>
+            <option value="Horror">Horror</option>
+            <option value="Musical">Musical</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Romance">Romance</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Sport">Sport</option>
+            <option value="Thriller">Thriller</option>
+            <option value="War">War</option>
+            <option value="Western">Western</option>
+        </select>
+        <span id="GenreError" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="MovieFile">Movie</label>
+        <select name="MovieFile" id="MovieFile" class="form-control">
+            <option value="">Select a movie</option>
+        </select>
+        
+    </div>
+
+    <div class="form-group">
+        <label for="PosterFile">Poster</label>
+        <select name="PosterFile" id="PosterFile" class="form-control">
+            <option value="">Select a poster</option>
+        </select>
+        
+    </div>
+
+
+
+    <button type="submit" class="btn btn-primary">Add Movie</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.getElementById('addActor').addEventListener('click', function () {
+            var actorsDiv = document.getElementById('actors');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'Actors';
+            input.className = 'form-control';
+            input.required = true;
+            actorsDiv.appendChild(input);
+        });
+
+        document.getElementById('addDirector').addEventListener('click', function () {
+            var directorsDiv = document.getElementById('directors');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'Directors';
+            input.className = 'form-control';
+            input.required = true;
+            directorsDiv.appendChild(input);
+        });
+
+        document.getElementById('addMovieForm').addEventListener('submit', function (event) {
+            var titleInput = document.getElementById('Title');
+            var titleError = document.getElementById('TitleError');
+            var descriptionInput = document.getElementById('Description');
+            var descriptionError = document.getElementById('DescriptionError');
+            var releaseTimeInput = document.getElementById('ReleaseTime');
+            var releaseTimeError = document.getElementById('ReleaseTimeError');
+            var genreInput = document.getElementById('Genre');
+            var genreError = document.getElementById('GenreError');
+
+            var isValid = true;
+
+            if (titleInput.value.trim() === '') {
+                titleError.textContent = 'Title is required.';
+                isValid = false;
+            } else {
+                titleError.textContent = '';
+            }
+
+            if (descriptionInput.value.trim() === '') {
+                descriptionError.textContent = 'Description is required.';
+                isValid = false;
+            } else {
+                descriptionError.textContent = '';
+            }
+
+            if (releaseTimeInput.value.trim() === '') {
+                releaseTimeError.textContent = 'Release date is required.';
+                isValid = false;
+            } else {
+                releaseTimeError.textContent = '';
+            }
+
+            if (genreInput.value.trim() === '') {
+                genreError.textContent = 'Genre is required.';
+                isValid = false;
+            } else {
+                genreError.textContent = '';
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+
+
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/Movies/GetAvailableMovies')
+                .then(response => response.json())
+                .then(movies => {
+                    const moviesDropdown = document.getElementById('MovieFile');
+                    if (moviesDropdown) {
+                        console.log(movies);
+                        movies.forEach(movie => {
+                            const option = document.createElement('option');
+                            option.value = movie.fileName;
+                            option.textContent = movie.fileTitle;
+                            moviesDropdown.appendChild(option);
+                        });
+                    } else {
+                        console.log("Movies dropdown not found!");
+                    }
+                })
+                .catch(error => console.log("Error fetching movies: " + error));
+
+            fetch('/Movies/GetAvailablePosters')
+                .then(response => response.json())
+                .then(posters => {
+                    const postersDropdown = document.getElementById('PosterFile');
+                    if (postersDropdown) {
+                        console.log(posters);
+                        posters.forEach(poster => {
+                            const option = document.createElement('option');
+                            option.value = poster.fileName;
+                            option.textContent = poster.fileTitle;
+                            postersDropdown.appendChild(option);
+                        });
+                    } else {
+                        console.log("Posters dropdown not found!");
+                    }
+                })
+                .catch(error => console.log("Error fetching posters: " + error));
+        });
+
+    </script>
+}

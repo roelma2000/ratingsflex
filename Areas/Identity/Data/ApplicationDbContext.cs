@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using ratingsflex.Areas.Identity.Data;
+using ratingsflex.Areas.Movies.Models;
 
 namespace ratingsflex.Areas.Identity.Data;
 
@@ -22,6 +23,8 @@ public class ApplicationDbContext : IdentityDbContext<ratingsflexUser>
         builder.ApplyConfiguration(new ApplicationUserEntityConfiguration());
     }
 
+    public DbSet<Movie> Movies { get; set; } 
+    public DbSet<Poster> Posters { get; set; } 
     public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<ratingsflexUser>
     {
         public void Configure(EntityTypeBuilder<ratingsflexUser> builder)
