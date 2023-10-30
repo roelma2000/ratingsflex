@@ -21,16 +21,21 @@ public class ApplicationDbContext : IdentityDbContext<ratingsflexUser>
         // For example, you can rename the ASP.NET Identity table names and more.
         // Add your customizations after calling base.OnModelCreating(builder);
         builder.ApplyConfiguration(new ApplicationUserEntityConfiguration());
+
+        // These lines should be inside the OnModelCreating method
+        builder.Entity<Movie>().HasKey(m => m.DynamoDBId);
+        builder.Entity<Poster>().HasKey(p => p.DynamoDBId);
     }
 
-    public DbSet<Movie> Movies { get; set; } 
-    public DbSet<Poster> Posters { get; set; } 
-    public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<ratingsflexUser>
+    public DbSet<Movie> Movies { get; set; }
+    public DbSet<Poster> Posters { get; set; }
+}
+
+public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<ratingsflexUser>
+{
+    public void Configure(EntityTypeBuilder<ratingsflexUser> builder)
     {
-        public void Configure(EntityTypeBuilder<ratingsflexUser> builder)
-        {
-            builder.Property(u => u.Firstname).HasMaxLength(255);
-            builder.Property(u => u.Lastname).HasMaxLength(255);
-        }
+        builder.Property(u => u.Firstname).HasMaxLength(255);
+        builder.Property(u => u.Lastname).HasMaxLength(255);
     }
 }

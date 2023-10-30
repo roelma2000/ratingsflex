@@ -11,5 +11,9 @@ namespace ratingsflex.Areas.Movies.Data
         Task AddMovie(MovieItem movie);
         Task<List<MovieItem>> GetMoviesById(string movieId);
         Task<bool> DeleteMovieByMovieId(string movieId, string releaseTime);
+
+        Task<MovieItem> GetMovieByMovieId(string movieId);
+        Task UpdateMovie(MovieItem movie);
+
     }
 }

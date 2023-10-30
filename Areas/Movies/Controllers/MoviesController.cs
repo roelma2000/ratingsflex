@@ -47,16 +47,16 @@ namespace ratingsflex.Areas.Movies.Controllers
         [Route("Movies/GetAvailableMovies")]
         public IActionResult GetAvailableMovies()
         {
+            string currentUserEmail = User.Identity.Name;
+
             var movies = _context.Movies
-                        .Where(m => m != null && !m.IsAssigned)
+                        .Where(m => m != null && !m.IsAssigned && m.FileOwner == currentUserEmail)
                         .Select(m => new
                         {
                             FileTitle = m.FileTitle ?? string.Empty,
                             FileName = m.FileName ?? string.Empty
                         })
                         .ToList();
-
-
 
             return Json(movies);
         }
@@ -65,13 +65,15 @@ namespace ratingsflex.Areas.Movies.Controllers
         [Route("Movies/GetAvailablePosters")]
         public IActionResult GetAvailablePosters()
         {
+            string currentUserEmail = User.Identity.Name;
+
             var posters = _context.Posters
-                        .Where(m => m != null && !m.IsAssigned)
+                        .Where(m => m != null && !m.IsAssigned && m.FileOwner == currentUserEmail)
                         .Select(m => new
-                                {
-                                    FileTitle = m.FileTitle ?? string.Empty,
-                                    FileName = m.FileName ?? string.Empty
-                                })
+                        {
+                            FileTitle = m.FileTitle ?? string.Empty,
+                            FileName = m.FileName ?? string.Empty
+                        })
                         .ToList();
 
             return Json(posters);
@@ -143,18 +145,28 @@ namespace ratingsflex.Areas.Movies.Controllers
                 var movieRecord = _context.Movies.FirstOrDefault(m => m.FileName == MovieFile);
                 if (movieRecord != null)
                 {
+                    _context.Movies.Remove(movieRecord);
+                    _context.SaveChanges();
+
                     movieRecord.DynamoDBId = movieId;
                     movieRecord.IsAssigned = true;
+
+                    _context.Movies.Add(movieRecord);
+                    _context.SaveChanges();
                 }
 
                 var posterRecord = _context.Posters.FirstOrDefault(p => p.FileName == PosterFile);
                 if (posterRecord != null)
                 {
+                    _context.Posters.Remove(posterRecord);
+                    _context.SaveChanges();
+
                     posterRecord.DynamoDBId = movieId;
                     posterRecord.IsAssigned = true;
-                }
 
-                _context.SaveChanges();
+                    _context.Posters.Add(posterRecord);
+                    _context.SaveChanges();
+                }
             }
             catch (Exception ex)
             {
@@ -162,6 +174,7 @@ namespace ratingsflex.Areas.Movies.Controllers
                 TempData["Notification"] = $"Error adding movie {movie.Title}.";
                 return RedirectToAction("ManageMovies");
             }
+
 
             TempData["Notification"] += " Movie added successfully.";
             return RedirectToAction("ManageMovies");
@@ -194,6 +207,149 @@ namespace ratingsflex.Areas.Movies.Controllers
             else
             {
                 return new JsonResult(new { success = false, message = "Failed to delete movie. Please try again." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> AddComment(string movieId, string commentText)
+        {
+            if (string.IsNullOrEmpty(commentText))
+            {
+                return new JsonResult(new { success = false, message = "Comment text cannot be empty." });
+            }
+
+            var movie = await _dynamoDbService.GetMovieByMovieId(movieId);
+            if (movie == null)
+            {
+                return new JsonResult(new { success = false, message = "Movie not found." });
+            }
+
+            var comment = new Dictionary<string, string>
+    {
+        { "commentText", commentText },
+        { "userId", User.Identity.Name },
+        { "timestamp", DateTime.UtcNow.ToString("o") }
+    };
+
+            movie.Comments.Add(comment);
+
+            try
+            {
+                await _dynamoDbService.UpdateMovie(movie);
+                return new JsonResult(new { success = true, message = "Comment added successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error adding comment to movie {movie.Title}: {ex.Message}");
+                return new JsonResult(new { success = false, message = "Failed to add comment. Please try again." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditComment(string movieId, int commentIndex, string newCommentText)
+        {
+            if (string.IsNullOrEmpty(newCommentText))
+            {
+                return new JsonResult(new { success = false, message = "Comment text cannot be empty." });
+            }
+
+            var movie = await _dynamoDbService.GetMovieByMovieId(movieId);
+            if (movie == null)
+            {
+                return new JsonResult(new { success = false, message = "Movie not found." });
+            }
+
+            if (commentIndex < 0 || commentIndex >= movie.Comments.Count)
+            {
+                return new JsonResult(new { success = false, message = "Invalid comment index." });
+            }
+
+            var comment = movie.Comments[commentIndex];
+            var userId = comment["userId"];
+            var timestamp = DateTime.Parse(comment["timestamp"]);
+
+            if (User.Identity.Name != userId)
+            {
+                return new JsonResult(new { success = false, message = "You can only edit your own comments." });
+            }
+
+            if ((DateTime.UtcNow - timestamp).TotalHours > 24)
+            {
+                return new JsonResult(new { success = false, message = "You can only edit comments within 24 hours of posting." });
+            }
+
+            comment["commentText"] = newCommentText;
+            comment["timestamp"] = DateTime.UtcNow.ToString("o");
+
+            try
+            {
+                await _dynamoDbService.UpdateMovie(movie);
+                return new JsonResult(new { success = true, message = "Comment edited successfully." });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error editing comment on movie {movie.Title}: {ex.Message}");
+                return new JsonResult(new { success = false, message = "Failed to edit comment. Please try again." });
+            }
+        }
+
+        public IActionResult UploadMovie()
+        {
+            _logger.LogInformation("UploadMovie method called");
+            return View("~/Areas/Movies/Views/Upload.cshtml");
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Upload(UploadViewModel model)
+        {
+            _logger.LogInformation("Upload method called");
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
+                _logger.LogInformation("==================================================================================");
+                _logger.LogError("Validation errors: " + string.Join(", ", errors));
+                _logger.LogInformation("There was an error with your submission. Please check the form and try again.");
+                _logger.LogInformation("==================================================================================");
+                return View("~/Areas/Movies/Views/Upload.cshtml", model);
+            }
+
+            try
+            {
+                var movieFileName = await _s3Service.UploadFileAsync(model.MovieFile, "ratingsflexmovies");
+                var posterFileName = await _s3Service.UploadFileAsync(model.PosterFile, "ratingsflexposters");
+
+                var movie = new Movie
+                {
+                    DynamoDBId = Guid.NewGuid().ToString(),
+                    FileTitle = model.MovieTitle,
+                    FileName = movieFileName,
+                    IsAssigned = false,
+                    FileOwner = User.Identity.Name
+                };
+
+                var poster = new Poster
+                {
+                    DynamoDBId = Guid.NewGuid().ToString(),
+                    FileTitle = model.MovieTitle,
+                    FileName = posterFileName,
+                    IsAssigned = false,
+                    FileOwner = User.Identity.Name
+                };
+
+                _context.Movies.Add(movie);
+                _context.Posters.Add(poster);
+                await _context.SaveChangesAsync();
+
+                TempData["SuccessMessage"] = "Movie and poster uploaded successfully!";
+                return RedirectToAction("ManageMovies");
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to upload movie and poster");
+                TempData["ErrorMessage"] = "Failed to upload movie and poster. Please try again later.";
+                return View("~/Areas/Movies/Views/Upload.cshtml");
             }
         }
 

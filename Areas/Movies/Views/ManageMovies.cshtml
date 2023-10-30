@@ -15,15 +15,59 @@
             @TempData["Notification"]
         </div>
     }
-
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-info">
+            @TempData["SuccessMessage"]
+        </div>
+    }
     <div class="manage-movies-header">
         <h1>Manage Movies</h1>
+        
+    </div>
+    <div class="manage-movies-list">
+        <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("UploadMovie", "Movies")'">Upload a Movie</button>
+        <button type="button" class="btn btn-danger" onclick="location.href='@Url.Action("Index", "Movies")'">Delete a Movie</button>
         <button type="button" class="btn btn-primary" onclick="location.href='@Url.Action("AddMovie", "Movies")'">Add Movie</button>
+        <label>Filter by Genre:</label>
+        <select>
+            <option value="All">All</option>
+            <option value="Action">Action</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Drama">Drama</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Animation">Animation</option>
+            <option value="Biography">Biography</option>
+            <option value="Crime">Crime</option>
+            <option value="Family">Family</option>
+            <option value="Documentary">Documentary</option>
+            <option value="Horror">Horror</option>
+            <option value="Musical">Musical</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Romance">Romance</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Sport">Sport</option>
+            <option value="Thriller">Thriller</option>
+            <option value="War">War</option>
+            <option value="Western">Western</option>
+        </select>
+
+        <label>Filter by Rating:</label>
+            <select name="rating">
+                <option value="0">All</option>
+                <option value="9">9+</option>
+                <option value="8">8+</option>
+                <option value="7">7+</option>
+                <option value="6">6+</option>
+                <option value="5">5+</option>
+                <option value="4">4+</option>
+                <option value="3">3+</option>
+                <option value="2">2+</option>
+                <option value="1">1+</option>
+            </select>
+
     </div>
 
-    <div class="manage-movies-filter">
-        <!-- Filter and search inputs go here -->
-    </div>
 
     <div class="manage-movies-list">
         @if (Model.Movies != null && Model.Movies.Count > 0)

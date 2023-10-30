@@ -10,6 +10,8 @@ using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.SimpleSystemsManagement.Model;
+using Amazon.SimpleSystemsManagement;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +21,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
 using ratingsflex.Areas.Identity.Data;
+
 
 namespace ratingsflex.Areas.Identity.Pages.Account
 {
@@ -30,13 +33,15 @@ namespace ratingsflex.Areas.Identity.Pages.Account
         private readonly IUserEmailStore<ratingsflexUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
+        private readonly IAmazonSimpleSystemsManagement _ssmClient;
 
         public RegisterModel(
             UserManager<ratingsflexUser> userManager,
             IUserStore<ratingsflexUser> userStore,
             SignInManager<ratingsflexUser> signInManager,
             ILogger<RegisterModel> logger,
-            IEmailSender emailSender)
+            IEmailSender emailSender, 
+            IAmazonSimpleSystemsManagement ssmClient)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -44,6 +49,7 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             _signInManager = signInManager;
             _logger = logger;
             _emailSender = emailSender;
+            _ssmClient = ssmClient;
         }
 
         /// <summary>
@@ -106,6 +112,10 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
             public string ConfirmPassword { get; set; }
+
+            [Required]
+            [Display(Name = "Phone Number")]
+            public string PhoneNumber { get; set; }
         }
 
 
@@ -125,6 +135,7 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 
                 user.Firstname = Input.Firstname;
                 user.Lastname = Input.Lastname;
+                user.PhoneNumber = Input.PhoneNumber;
 
                 await _userStore.SetUserNameAsync(user, Input.Email, CancellationToken.None);
                 await _emailStore.SetEmailAsync(user, Input.Email, CancellationToken.None);
@@ -133,6 +144,8 @@ namespace ratingsflex.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
+
+                    SaveCredentialsInParameterStore(Input.Email, Input.Password);
 
                     var userId = await _userManager.GetUserIdAsync(user);
                     var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -166,6 +179,30 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             return Page();
         }
 
+        private void SaveCredentialsInParameterStore(string username, string password)
+        {
+            // Replace '@' with a placeholder, you can choose a different method of sanitization if required
+            var sanitizedUsername = username.Replace('@', '_').Replace('.', '-');
+
+            var parameterName = $"/ratingsflex/credentials/{sanitizedUsername}";
+            var request = new PutParameterRequest
+            {
+                Name = parameterName,
+                Value = password,
+                Type = ParameterType.SecureString,
+                Overwrite = true
+            };
+
+            try
+            {
+                var response = _ssmClient.PutParameterAsync(request).Result;
+                _logger.LogInformation($"Successfully saved credentials for {username} in AWS SSM Parameter Store.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error saving credentials for {username} in AWS SSM Parameter Store: {ex.Message}");
+            }
+        }
         private ratingsflexUser CreateUser()
         {
             try

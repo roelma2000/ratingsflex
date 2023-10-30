@@ -1,0 +1,96 @@
+﻿@page
+@model ratingsflex.Areas.Movies.Models.EditMovieViewModel
+@{
+    ViewData["Title"] = "Edit Movie";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+<h1 class="edit-movie-title">Edit Movie</h1>
+<form id="editMovieForm" asp-controller="Movies" asp-action="EditMovie" method="post" class="edit-movie-form">
+
+    <div class="form-group">
+        <label for="Title">Title</label>
+        <input type="text" id="Title" name="Title" class="form-control" value="@Model.Title" required />
+        <span id="TitleError" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Description">Description</label>
+        <textarea id="Description" name="Description" class="form-control" required>@Model.Description</textarea>
+        <span id="DescriptionError" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="ReleaseTime">Release Date</label>
+        <input type="date" id="ReleaseTime" name="ReleaseTime" class="form-control" value="@Model.ReleaseTime" required />
+        <span id="ReleaseTimeError" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="Actors">Actors</label>
+        <div id="actors">
+            @foreach (var actor in Model.Actors)
+            {
+                <input type="text" name="Actors" class="form-control" value="@actor" required />
+            }
+        </div>
+        <span id="ActorsError" text-danger"></span>
+        <button type="button" id="addActor" class="btn btn-secondary">Add Actor</button>
+    </div>
+
+    <div class="form-group">
+        <label for="Directors">Directors</label>
+        <div id="directors">
+            @foreach (var director in Model.Directors)
+            {
+                <input type="text" name="Directors" class="form-control" value="@director" required />
+            }
+        </div>
+        <span id="DirectorsError" class="text-danger"></span>
+        <button type="button" id="addDirector" class="btn btn-secondary">Add Director</button>
+    </div>
+
+    <div class="form-group">
+        <label for="Genre">Genre</label>
+        <select id="Genre" name="Genre" class="form-control" required>
+            <option value="Action" @(Model.Genre == "Action" ? "selected" : "")>Action</option>
+            <option value="Action">Action</option>
+            <option value="Comedy">Comedy</option>
+            <option value="Drama">Drama</option>
+            <option value="Adventure">Adventure</option>
+            <option value="Animation">Animation</option>
+            <option value="Biography">Biography</option>
+            <option value="Crime">Crime</option>
+            <option value="Family">Family</option>
+            <option value="Documentary">Documentary</option>
+            <option value="Horror">Horror</option>
+            <option value="Musical">Musical</option>
+            <option value="Mystery">Mystery</option>
+            <option value="Romance">Romance</option>
+            <option value="Sci-Fi">Sci-Fi</option>
+            <option value="Sport">Sport</option>
+            <option value="Thriller">Thriller</option>
+            <option value="War">War</option>
+            <option value="Western">Western</option>
+        </select>
+        <span id="GenreError" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label for="MovieFile">Movie</label>
+        <select name="MovieFile" id="MovieFile" class="form-control">
+            <option value="">Select a movie</option>
+        </select>
+
+    </div>
+
+    <div class="form-group">
+        <label for="PosterFile">Poster</label>
+        <select name="PosterFile" id="PosterFile" class="form-control">
+            <option value="">Select a poster</option>
+        </select>
+
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>

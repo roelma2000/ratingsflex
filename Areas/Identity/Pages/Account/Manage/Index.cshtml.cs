@@ -74,8 +74,14 @@ namespace ratingsflex.Areas.Identity.Pages.Account.Manage
             };
         }
 
+
         public async Task<IActionResult> OnGetAsync()
         {
+            if (TempData["SuccessMessage"] != null)
+            {
+                ViewData["SuccessMessage"] = TempData["SuccessMessage"].ToString();
+            }
+
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {

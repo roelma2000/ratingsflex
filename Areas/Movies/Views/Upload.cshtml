@@ -1,0 +1,92 @@
+﻿@model ratingsflex.Areas.Movies.Models.UploadViewModel
+
+@{
+    ViewData["Title"] = "Upload Movie";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+<h2>@ViewData["Title"]</h2>
+
+<form id="uploadForm" action="/Movies/Upload" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="movieTitle">Movie Title</label>
+        <input type="text" id="movieTitle" name="MovieTitle" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="movieFile">Movie File</label>
+        <input type="file" id="movieFile" name="MovieFile" class="form-control" required />
+        <span id="movieFileError" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label for="posterFile">Poster File</label>
+        <input type="file" id="posterFile" name="PosterFile" class="form-control" required />
+        <span id="posterFileError" class="text-danger"></span>
+    </div>
+    <button type="submit" class="btn btn-primary">Upload</button>
+</form>
+
+
+@section Scripts {
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function (event) {
+            try {
+                const movieFileInput = document.getElementById('movieFile');
+                const movieFile = movieFileInput.files[0];
+                const posterFileInput = document.getElementById('posterFile');
+                const posterFile = posterFileInput.files[0];
+
+                const movieError = document.getElementById('movieFileError');
+                const posterError = document.getElementById('posterFileError');
+
+                const isValidVideo = movieFile && movieFile.type.startsWith('video/');
+                const isValidImage = posterFile && posterFile.type.startsWith('image/');
+
+                if (!isValidVideo) {
+                    movieError.textContent = 'Please upload a valid video file.';
+                    event.preventDefault();
+                    console.log('Invalid video file');  // Log when the video file is invalid
+                } else {
+                    movieError.textContent = '';
+                }
+
+                if (!isValidImage) {
+                    posterError.textContent = 'Please upload a valid image file.';
+                    event.preventDefault();
+                    console.log('Invalid image file');  // Log when the image file is invalid
+                } else {
+                    posterError.textContent = '';
+                }
+            } catch (error) {
+                console.error('Error during form submission:', error);
+            }
+        });
+
+        document.getElementById('movieFile').addEventListener('change', function () {
+            console.log('Movie file input changed');  // Log when the movie file input changes
+            const maxSize = 2147483648;  // 2GB in bytes
+            const fileInput = document.getElementById('movieFile');
+            const file = fileInput.files[0];
+
+            if (file && file.size > maxSize) {
+                alert('File is too large. Maximum allowed file size is 2GB.');
+                fileInput.value = '';  // Clear the file input
+                console.log('Movie file is too large');  // Log when the movie file is too large
+            }
+        });
+
+        document.getElementById('posterFile').addEventListener('change', function () {
+            console.log('Poster file input changed');  // Log when the poster file input changes
+            const maxSize = 2097152;  // 2MB in bytes
+            const fileInput = document.getElementById('posterFile');
+            const file = fileInput.files[0];
+
+            if (file && file.size > maxSize) {
+                alert('File is too large. Maximum allowed file size is 2MB.');
+                fileInput.value = '';  // Clear the file input
+                console.log('Poster file is too large');  // Log when the poster file is too large
+            }
+        });
+
+    </script>
+}

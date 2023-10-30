@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using ratingsflex.Areas.Identity.Data;
 
 namespace ratingsflex.Controllers
 {
@@ -13,5 +15,7 @@ namespace ratingsflex.Controllers
         {
             return View();
         }
+
+
     }
 }

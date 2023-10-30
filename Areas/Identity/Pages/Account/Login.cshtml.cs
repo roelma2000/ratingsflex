@@ -15,6 +15,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
 using ratingsflex.Areas.Identity.Data;
+using Amazon.SimpleSystemsManagement.Model;
+using Amazon.SimpleSystemsManagement;
+using Microsoft.Extensions.Logging;
+
 
 namespace ratingsflex.Areas.Identity.Pages.Account
 {
@@ -22,11 +26,13 @@ namespace ratingsflex.Areas.Identity.Pages.Account
     {
         private readonly SignInManager<ratingsflexUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
+        private readonly IAmazonSimpleSystemsManagement _ssmClient;
 
-        public LoginModel(SignInManager<ratingsflexUser> signInManager, ILogger<LoginModel> logger)
+        public LoginModel(SignInManager<ratingsflexUser> signInManager, ILogger<LoginModel> logger, IAmazonSimpleSystemsManagement ssmClient)
         {
             _signInManager = signInManager;
             _logger = logger;
+            _ssmClient = ssmClient;
         }
 
         /// <summary>
@@ -110,22 +116,23 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
-                // This doesn't count login failures towards account lockout
-                // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
-                if (result.Succeeded)
+                // Retrieve password from AWS SSM Parameter Store
+                var storedPassword = GetCredentialsFromParameterStore(Input.Email);
+
+                // Compare entered password with retrieved password
+                if (Input.Password == storedPassword)
                 {
-                    _logger.LogInformation("User logged in.");
-                    return LocalRedirect(returnUrl);
-                }
-                if (result.RequiresTwoFactor)
-                {
-                    return RedirectToPage("./LoginWith2fa", new { ReturnUrl = returnUrl, RememberMe = Input.RememberMe });
-                }
-                if (result.IsLockedOut)
-                {
-                    _logger.LogWarning("User account locked out.");
-                    return RedirectToPage("./Lockout");
+                    var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                    if (result.Succeeded)
+                    {
+                        _logger.LogInformation("User logged in.");
+                        return LocalRedirect(returnUrl);
+                    }
+                    else
+                    {
+                        ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                        return Page();
+                    }
                 }
                 else
                 {
@@ -137,5 +144,35 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             // If we got this far, something failed, redisplay form
             return Page();
         }
+
+        private string GetCredentialsFromParameterStore(string username)
+        {
+            // Replace '@' with '_', and '.' with '-' to sanitize the username
+            var sanitizedUsername = username.Replace('@', '_').Replace('.', '-');
+
+            var parameterName = $"/ratingsflex/credentials/{sanitizedUsername}";
+            var request = new GetParameterRequest
+            {
+                Name = parameterName,
+                WithDecryption = true
+            };
+
+            try
+            {
+                var response = _ssmClient.GetParameterAsync(request).Result;
+                _logger.LogInformation($"Successfully retrieved credentials for {username} from AWS SSM Parameter Store.");
+                return response.Parameter.Value;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Error retrieving credentials for {username} from AWS SSM Parameter Store: {ex.Message}");
+                return null;
+            }
+        }
+
+
+
+
+
     }
 }

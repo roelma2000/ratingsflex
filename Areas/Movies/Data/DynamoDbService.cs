@@ -110,5 +110,34 @@ namespace ratingsflex.Areas.Movies.Data
         }
 
 
+        public async Task<MovieItem> GetMovieByMovieId(string movieId)
+        {
+            try
+            {
+                var movie = await _context.LoadAsync<MovieItem>(movieId);
+                return movie;
+            }
+            catch (AmazonDynamoDBException e)
+            {
+                _logger.LogError($"Failed to get movie with MovieId: {movieId}. Exception: {e.Message}");
+                return null;
+            }
+        }
+
+        public async Task UpdateMovie(MovieItem movie)
+        {
+            try
+            {
+                await _context.SaveAsync(movie);
+            }
+            catch (AmazonDynamoDBException e)
+            {
+                _logger.LogError($"Failed to update movie with MovieId: {movie.MovieId}. Exception: {e.Message}");
+                throw;
+            }
+        }
+
+
+
     }
 }

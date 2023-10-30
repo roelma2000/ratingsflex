@@ -15,8 +15,10 @@ namespace ratingsflex.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var successMessage = TempData["SuccessMessage"] as string;
+            return View(model: successMessage);
         }
+
 
         public IActionResult Privacy()
         {

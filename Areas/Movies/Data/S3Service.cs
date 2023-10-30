@@ -4,6 +4,8 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using ratingsflex.Areas.Movies.Models;
 
 namespace ratingsflex.Areas.Movies.Data
 {
@@ -11,56 +13,48 @@ namespace ratingsflex.Areas.Movies.Data
     {
         private readonly IAmazonS3 _s3Client;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<DynamoDbService> _logger;
 
-        public S3Service(IAmazonS3 s3Client, IConfiguration configuration)
+        public S3Service(IAmazonS3 s3Client, IConfiguration configuration, ILogger<DynamoDbService> logger)
         {
             _s3Client = s3Client ?? throw new ArgumentNullException(nameof(s3Client));
             _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<List<string>> GetAvailableMovies()
+        public async Task<string> UploadFileAsync(IFormFile file, string bucketName)
         {
-            return await GetFileNamesFromBucket(_configuration["S3Buckets:ratingsflexmovies"]);
-        }
+            if (file == null || file.Length == 0)
+                throw new ArgumentException("File is empty");
 
-        public async Task<List<string>> GetAvailablePosters()
-        {
-            return await GetFileNamesFromBucket(_configuration["S3Buckets:ratingsflexposters"]);
-        }
+            var fileKey = Guid.NewGuid().ToString() + "_" + file.FileName;
 
-        private async Task<List<string>> GetFileNamesFromBucket(string bucketName)
-        {
-            if (string.IsNullOrEmpty(bucketName))
+            using (var stream = new MemoryStream())
             {
-                Console.WriteLine("Bucket name is either null or empty.");
-                return new List<string>();
-            }
-
-            var fileNames = new List<string>();
-            try
-            {
-                var response = await _s3Client.ListObjectsV2Async(new ListObjectsV2Request
+                await file.CopyToAsync(stream);
+                var putObjectRequest = new PutObjectRequest
                 {
-                    BucketName = bucketName
-                });
+                    BucketName = bucketName,
+                    Key = fileKey,
+                    InputStream = stream,
+                    ContentType = file.ContentType
+                };
+
+                var response = await _s3Client.PutObjectAsync(putObjectRequest);
 
                 if (response.HttpStatusCode == System.Net.HttpStatusCode.OK)
                 {
-                    foreach (var s3Object in response.S3Objects)
-                    {
-                        fileNames.Add(s3Object.Key);
-                    }
+                    _logger.LogInformation($"Successfully uploade the FileId: {fileKey}.");
+                    return fileKey;
                 }
                 else
                 {
-                    Console.WriteLine($"Error getting files from bucket {bucketName}. HTTP Status Code: {response.HttpStatusCode}");
+                    throw new Exception("Failed to upload file to S3");
                 }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error getting files from bucket {bucketName}. Exception: {ex.Message}");
-            }
-            return fileNames;
         }
+
+
+
     }
 }
