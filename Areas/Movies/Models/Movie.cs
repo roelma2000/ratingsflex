@@ -5,6 +5,8 @@ namespace ratingsflex.Areas.Movies.Models
 {
     public class Movie
     {
+        public int Id { get; set; } 
+
         public string? DynamoDBId { get; set; }
 
         public string? FileTitle { get; set; }
@@ -15,5 +17,7 @@ namespace ratingsflex.Areas.Movies.Models
         public bool IsAssigned { get; set; }
 
         public string? FileOwner { get; set; }
+
+        public ICollection<Poster> Posters { get; set; } = new List<Poster>();  // navigation property for posters
     }
 }

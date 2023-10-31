@@ -7,5 +7,6 @@ namespace ratingsflex.Areas.Movies.Data
     {
 
         Task<string> UploadFileAsync(IFormFile file, string bucketName);
+        Task DeleteFileAsync(string fileKey, string bucketName);
     }
 }

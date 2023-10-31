@@ -1,0 +1,67 @@
+﻿@using ratingsflex.Areas.Movies.Models
+@model ManageUploadedFilesViewModel
+
+@{
+    ViewData["Title"] = "Manage Movies and Posters";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+<h2>Manage Uploaded Movies and Posters Files</h2>
+@if (TempData["Notification"] != null)
+{
+    <div class="alert alert-info">
+        @TempData["Notification"]
+    </div>
+}
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["SuccessMessage"]
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">
+        @TempData["ErrorMessage"]
+    </div>
+}
+
+
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Movie & Poster Files</th>
+            <th>Is Assigned to Movie</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model.UploadedFiles != null && Model.UploadedFiles.Any())
+        {
+            foreach (var item in Model.UploadedFiles)
+            {
+                <tr>
+                    <td>@item.FileTitle</td>
+                    <td>@item.IsAssigned</td>
+                    <td>
+                        @if (!item.IsAssigned)
+                        {
+                            <form action="/Movies/DeleteMovieAndPosterFile" method="post">
+                                <input type="hidden" name="id" value="@item.Id" />
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+        else
+        {
+            <tr>
+                <td colspan="3">No data available</td>
+            </tr>
+        }
+    </tbody>
+</table>

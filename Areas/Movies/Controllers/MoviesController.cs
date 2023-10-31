@@ -79,8 +79,6 @@ namespace ratingsflex.Areas.Movies.Controllers
             return Json(posters);
         }
 
-
-
         public IActionResult AddMovie()
         {
             return View("~/Areas/Movies/Views/AddMovie.cshtml");
@@ -321,29 +319,31 @@ namespace ratingsflex.Areas.Movies.Controllers
 
                 var movie = new Movie
                 {
-                    DynamoDBId = Guid.NewGuid().ToString(),
+                    DynamoDBId = "",
                     FileTitle = model.MovieTitle,
                     FileName = movieFileName,
                     IsAssigned = false,
                     FileOwner = User.Identity.Name
                 };
 
+                _context.Movies.Add(movie);
+                await _context.SaveChangesAsync();  // Save changes to generate the movie ID
+
                 var poster = new Poster
                 {
-                    DynamoDBId = Guid.NewGuid().ToString(),
+                    MovieId = movie.Id,  // Set the MovieId property to the Id of the movie
+                    DynamoDBId = "",
                     FileTitle = model.MovieTitle,
                     FileName = posterFileName,
                     IsAssigned = false,
                     FileOwner = User.Identity.Name
                 };
 
-                _context.Movies.Add(movie);
                 _context.Posters.Add(poster);
                 await _context.SaveChangesAsync();
 
                 TempData["SuccessMessage"] = "Movie and poster uploaded successfully!";
                 return RedirectToAction("ManageMovies");
-
             }
             catch (Exception ex)
             {
@@ -351,6 +351,53 @@ namespace ratingsflex.Areas.Movies.Controllers
                 TempData["ErrorMessage"] = "Failed to upload movie and poster. Please try again later.";
                 return View("~/Areas/Movies/Views/Upload.cshtml");
             }
+        }
+
+        public async Task<IActionResult> ManageFiles()
+        {
+            _logger.LogInformation("\nManageFiles method called\n");
+            var movies = _context.Movies
+                .Select(m => new ManageUploadedFile
+                {
+                    Id = m.Id,
+                    FileTitle = m.FileTitle,
+                    IsAssigned = m.IsAssigned
+                })
+                .ToList();
+
+            var viewModel = new ManageUploadedFilesViewModel
+            {
+                UploadedFiles = movies
+            };
+
+            return View("~/Areas/Movies/Views/ManageFiles.cshtml", viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteMovieAndPosterFile(int id)
+        {
+            _logger.LogInformation($"\nDeleteMovieAndPosterFile method called with id: {id}\n");
+            // Find the movie and poster by id
+            var movie = _context.Movies.FirstOrDefault(m => m.Id == id);
+            var poster = _context.Posters.FirstOrDefault(p => p.MovieId == id);
+
+            if (movie == null || poster == null)
+            {
+                TempData["ErrorMessage"] = "Movie or poster not found.";
+                return RedirectToAction("ManageFiles");
+            }
+
+            // Delete the movie and poster files from S3 buckets
+            await _s3Service.DeleteFileAsync(movie.FileName, "ratingsflexmovies");
+            await _s3Service.DeleteFileAsync(poster.FileName, "ratingsflexposters");
+
+            // Delete the movie and poster records from the database
+            _context.Movies.Remove(movie);
+            _context.Posters.Remove(poster);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = "Movie and poster deleted successfully!";
+            return RedirectToAction("ManageFiles");
         }
 
 

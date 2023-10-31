@@ -54,6 +54,21 @@ namespace ratingsflex.Areas.Movies.Data
             }
         }
 
+        public async Task DeleteFileAsync(string fileKey, string bucketName)
+        {
+            var deleteObjectRequest = new DeleteObjectRequest
+            {
+                BucketName = bucketName,
+                Key = fileKey
+            };
+
+            var response = await _s3Client.DeleteObjectAsync(deleteObjectRequest);
+
+            if (response.HttpStatusCode != System.Net.HttpStatusCode.NoContent)
+            {
+                throw new Exception("Failed to delete file from S3");
+            }
+        }
 
 
     }

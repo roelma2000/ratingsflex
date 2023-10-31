@@ -23,8 +23,8 @@ public class ApplicationDbContext : IdentityDbContext<ratingsflexUser>
         builder.ApplyConfiguration(new ApplicationUserEntityConfiguration());
 
         // These lines should be inside the OnModelCreating method
-        builder.Entity<Movie>().HasKey(m => m.DynamoDBId);
-        builder.Entity<Poster>().HasKey(p => p.DynamoDBId);
+        builder.Entity<Movie>().HasKey(m => m.Id);
+        builder.Entity<Poster>().HasKey(p => p.Id);
     }
 
     public DbSet<Movie> Movies { get; set; }
