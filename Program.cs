@@ -26,11 +26,7 @@ namespace ratingsflex
             var builder = WebApplication.CreateBuilder(args);
             //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
-            // Configure services
-            builder.Services.Configure<FormOptions>(options =>
-            {
-                options.MultipartBodyLengthLimit = 2_147_483_648; // 2GB
-            });
+           
 
             //builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
@@ -42,6 +38,11 @@ namespace ratingsflex
             connectionString.Password = builder.Configuration["DbPassword"];
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString.ConnectionString));
 
+            // Configure services
+            builder.Services.Configure<FormOptions>(options =>
+            {
+                options.MultipartBodyLengthLimit = 2_147_483_648; // 2GB
+            });
 
 
             builder.Services.AddDefaultIdentity<RatingsflexUser>(options => options.SignIn.RequireConfirmedAccount = false)
