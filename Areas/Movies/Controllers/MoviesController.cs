@@ -377,7 +377,9 @@ namespace ratingsflex.Areas.Movies.Controllers
         public async Task<IActionResult> ManageFiles()
         {
             _logger.LogInformation("\nManageFiles method called\n");
+            var currentUserId = User.Identity.Name;
             var movies = _context.Movies
+                .Where(m => m.FileOwner == currentUserId)
                 .Select(m => new ManageUploadedFile
                 {
                     Id = m.Id,
