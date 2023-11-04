@@ -8,10 +8,10 @@ namespace ratingsflex.Areas.Identity.Controllers
 {
     public class ProfileController : Controller  // Inherit from Controller
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
         private readonly ILogger<ProfileController> _logger;
 
-        public ProfileController(UserManager<ratingsflexUser> userManager, ILogger<ProfileController> logger)  // Constructor
+        public ProfileController(UserManager<RatingsflexUser> userManager, ILogger<ProfileController> logger)  // Constructor
         {
             _userManager = userManager;
             _logger = logger;
@@ -26,7 +26,7 @@ namespace ratingsflex.Areas.Identity.Controllers
                 {
                     foreach (var error in modelStateValue.Errors)
                     {
-                        _logger.LogError(error.ErrorMessage);
+                        _logger.LogError("Model validation error: {ErrorMessage}", error.ErrorMessage);
                     }
                 }
                 return View(model);
@@ -65,9 +65,6 @@ namespace ratingsflex.Areas.Identity.Controllers
         }
 
 
-        private void SaveCredentialsInParameterStore(string username, string password)
-        {
-            // Implement the logic to save credentials in AWS SSM Parameter Store
-        }
+
     }
 }

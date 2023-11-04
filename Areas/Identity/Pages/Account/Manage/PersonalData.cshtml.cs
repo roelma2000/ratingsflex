@@ -12,11 +12,11 @@ namespace ratingsflex.Areas.Identity.Pages.Account.Manage
 {
     public class PersonalDataModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
         private readonly ILogger<PersonalDataModel> _logger;
 
         public PersonalDataModel(
-            UserManager<ratingsflexUser> userManager,
+            UserManager<RatingsflexUser> userManager,
             ILogger<PersonalDataModel> logger)
         {
             _userManager = userManager;

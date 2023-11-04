@@ -1,5 +1,5 @@
-﻿@page
-@model ratingsflex.Areas.Movies.Models.EditMovieViewModel
+﻿@model ratingsflex.Areas.Movies.Models.EditMovieViewModel
+
 @{
     ViewData["Title"] = "Edit Movie";
     Layout = "~/Views/Shared/_Layout.cshtml";
@@ -7,6 +7,7 @@
 }
 
 <h1 class="edit-movie-title">Edit Movie</h1>
+
 <form id="editMovieForm" asp-controller="Movies" asp-action="EditMovie" method="post" class="edit-movie-form">
 
     <div class="form-group">
@@ -30,21 +31,25 @@
     <div class="form-group">
         <label for="Actors">Actors</label>
         <div id="actors">
-            @foreach (var actor in Model.Actors)
+            @if (Model.Actors != null)
             {
-                <input type="text" name="Actors" class="form-control" value="@actor" required />
+                for (int i = 0; i < Model.Actors.Count; i++)
+                {
+                    <input type="text" name="Actors[@i]" class="form-control" value="@Model.Actors[i]" required />
+                }
             }
+
         </div>
-        <span id="ActorsError" text-danger"></span>
+        <span id="ActorsError" class="text-danger"></span>
         <button type="button" id="addActor" class="btn btn-secondary">Add Actor</button>
     </div>
 
     <div class="form-group">
         <label for="Directors">Directors</label>
         <div id="directors">
-            @foreach (var director in Model.Directors)
+            @for (int i = 0; i < Model.Directors.Count; i++)
             {
-                <input type="text" name="Directors" class="form-control" value="@director" required />
+                <input type="text" name="Directors[@i]" class="form-control" value="@Model.Directors[i]" required />
             }
         </div>
         <span id="DirectorsError" class="text-danger"></span>
@@ -81,16 +86,164 @@
         <label for="MovieFile">Movie</label>
         <select name="MovieFile" id="MovieFile" class="form-control">
             <option value="">Select a movie</option>
+            @if (!string.IsNullOrEmpty(Model.MovieFile))
+            {
+                var movieUri = new Uri(Model.MovieFile);
+                var movieFilename = movieUri.Segments.Last();
+                <option value="@movieFilename" selected>@movieFilename</option>
+            }
         </select>
-
     </div>
-
     <div class="form-group">
         <label for="PosterFile">Poster</label>
         <select name="PosterFile" id="PosterFile" class="form-control">
             <option value="">Select a poster</option>
+            @if (!string.IsNullOrEmpty(Model.PosterFile))
+            {
+                var posterUri = new Uri(Model.PosterFile);
+                var posterFilename = posterUri.Segments.Last();
+                <option value="@posterFilename" selected>@posterFilename</option>
+            }
         </select>
-
     </div>
+
+
     <button type="submit" class="btn btn-primary">Save Changes</button>
 </form>
+
+@section Scripts {
+    <script>
+        document.getElementById('addActor').addEventListener('click', function () {
+            var actorsDiv = document.getElementById('actors');
+            var div = document.createElement('div');
+            div.className = 'form-group';
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'Actors';
+            input.className = 'form-control';
+            input.required = true;
+
+            var button = document.createElement('button');
+            button.textContent = 'Delete';
+            button.type = 'button';
+            button.className = 'btn btn-danger';
+            button.addEventListener('click', function () {
+                actorsDiv.removeChild(div);
+            });
+
+            div.appendChild(input);
+            div.appendChild(button);
+            actorsDiv.appendChild(div);
+        });
+
+        document.getElementById('addDirector').addEventListener('click', function () {
+            var directorsDiv = document.getElementById('directors');
+            var div = document.createElement('div');
+            div.className = 'form-group';
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'Directors';
+            input.className = 'form-control';
+            input.required = true;
+
+            var button = document.createElement('button');
+            button.textContent = 'Delete';
+            button.type = 'button';
+            button.className = 'btn btn-danger';
+            button.addEventListener('click', function () {
+                directorsDiv.removeChild(div);
+            });
+
+            div.appendChild(input);
+            div.appendChild(button);
+            directorsDiv.appendChild(div);
+        });
+
+
+        document.getElementById('editMovieForm').addEventListener('submit', function (event) {
+            var titleInput = document.getElementById('Title');
+            var titleError = document.getElementById('TitleError');
+            var descriptionInput = document.getElementById('Description');
+            var descriptionError = document.getElementById('DescriptionError');
+            var releaseTimeInput = document.getElementById('ReleaseTime');
+            var releaseTimeError = document.getElementById('ReleaseTimeError');
+            var genreInput = document.getElementById('Genre');
+            var genreError = document.getElementById('GenreError');
+
+            var isValid = true;
+
+            if (titleInput.value.trim() === '') {
+                titleError.textContent = 'Title is required.';
+                isValid = false;
+            } else {
+                titleError.textContent = '';
+            }
+
+            if (descriptionInput.value.trim() === '') {
+                descriptionError.textContent = 'Description is required.';
+                isValid = false;
+            } else {
+                descriptionError.textContent = '';
+            }
+
+            if (releaseTimeInput.value.trim() === '') {
+                releaseTimeError.textContent = 'Release date is required.';
+                isValid = false;
+            } else {
+                releaseTimeError.textContent = '';
+            }
+
+            if (genreInput.value.trim() === '') {
+                genreError.textContent = 'Genre is required.';
+                isValid = false;
+            } else {
+                genreError.textContent = '';
+            }
+
+            if (!isValid) {
+                event.preventDefault();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            fetch('/Movies/GetAvailableMovies')
+                .then(response => response.json())
+                .then(movies => {
+                    const moviesDropdown = document.getElementById('MovieFile');
+                    if (moviesDropdown) {
+                        console.log(movies);
+                        movies.forEach(movie => {
+                            const option = document.createElement('option');
+                            option.value = movie.fileName;
+                            option.textContent = movie.fileTitle + ' [' + movie.fileName + ']';
+                            moviesDropdown.appendChild(option);
+                        });
+                    } else {
+                        console.log("Movies dropdown not found!");
+                    }
+                })
+                .catch(error => console.log("Error fetching movies: " + error));
+
+            fetch('/Movies/GetAvailablePosters')
+                .then(response => response.json())
+                .then(posters => {
+                    const postersDropdown = document.getElementById('PosterFile');
+                    if (postersDropdown) {
+                        console.log(posters);
+                        posters.forEach(poster => {
+                            const option = document.createElement('option');
+                            option.value = poster.fileName;
+                            option.textContent = poster.fileTitle + ' [' + poster.fileName + ']';
+                            postersDropdown.appendChild(option);
+                        });
+                    } else {
+                        console.log("Posters dropdown not found!");
+                    }
+                })
+                .catch(error => console.log("Error fetching posters: " + error));
+        });
+
+    </script>
+}

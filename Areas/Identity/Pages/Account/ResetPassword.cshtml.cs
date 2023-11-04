@@ -17,9 +17,9 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class ResetPasswordModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
 
-        public ResetPasswordModel(UserManager<ratingsflexUser> userManager)
+        public ResetPasswordModel(UserManager<RatingsflexUser> userManager)
         {
             _userManager = userManager;
         }

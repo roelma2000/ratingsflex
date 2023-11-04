@@ -89,22 +89,50 @@
     <script>
         document.getElementById('addActor').addEventListener('click', function () {
             var actorsDiv = document.getElementById('actors');
+            var div = document.createElement('div');
+            div.className = 'form-group';
+
             var input = document.createElement('input');
             input.type = 'text';
             input.name = 'Actors';
             input.className = 'form-control';
             input.required = true;
-            actorsDiv.appendChild(input);
+
+            var button = document.createElement('button');
+            button.textContent = 'Delete';
+            button.type = 'button';
+            button.className = 'btn btn-danger';
+            button.addEventListener('click', function () {
+                actorsDiv.removeChild(div);
+            });
+
+            div.appendChild(input);
+            div.appendChild(button);
+            actorsDiv.appendChild(div);
         });
 
         document.getElementById('addDirector').addEventListener('click', function () {
             var directorsDiv = document.getElementById('directors');
+            var div = document.createElement('div');
+            div.className = 'form-group';
+
             var input = document.createElement('input');
             input.type = 'text';
             input.name = 'Directors';
             input.className = 'form-control';
             input.required = true;
-            directorsDiv.appendChild(input);
+
+            var button = document.createElement('button');
+            button.textContent = 'Delete';
+            button.type = 'button';
+            button.className = 'btn btn-danger';
+            button.addEventListener('click', function () {
+                directorsDiv.removeChild(div);
+            });
+
+            div.appendChild(input);
+            div.appendChild(button);
+            directorsDiv.appendChild(div);
         });
 
         document.getElementById('addMovieForm').addEventListener('submit', function (event) {
@@ -165,7 +193,7 @@
                         movies.forEach(movie => {
                             const option = document.createElement('option');
                             option.value = movie.fileName;
-                            option.textContent = movie.fileTitle;
+                            option.textContent = movie.fileTitle + ' [' + movie.fileName + ']';
                             moviesDropdown.appendChild(option);
                         });
                     } else {
@@ -183,7 +211,7 @@
                         posters.forEach(poster => {
                             const option = document.createElement('option');
                             option.value = poster.fileName;
-                            option.textContent = poster.fileTitle;
+                            option.textContent = poster.fileTitle + ' [' + poster.fileName + ']';
                             postersDropdown.appendChild(option);
                         });
                     } else {

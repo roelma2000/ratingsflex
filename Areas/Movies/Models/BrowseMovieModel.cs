@@ -1,11 +1,12 @@
 ﻿namespace ratingsflex.Areas.Movies.Models
 {
-    public class ManageMoviesViewModel
+    public class BrowseMovieModel
     {
-        public List<MovieItem> Movies { get; set; }
+        public List<ListAllMoviesViewModel> Movies { get; set; }
         public PaginationModel Pagination { get; set; }
         public string SelectedGenre { get; set; }
 
         public string SelectedRating { get; set; }
     }
+
 }

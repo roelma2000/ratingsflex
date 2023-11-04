@@ -15,12 +15,12 @@ namespace ratingsflex.Areas.Identity.Pages.Account.Manage
 {
     public class IndexModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
-        private readonly SignInManager<ratingsflexUser> _signInManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
+        private readonly SignInManager<RatingsflexUser> _signInManager;
 
         public IndexModel(
-            UserManager<ratingsflexUser> userManager,
-            SignInManager<ratingsflexUser> signInManager)
+            UserManager<RatingsflexUser> userManager,
+            SignInManager<RatingsflexUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -61,7 +61,7 @@ namespace ratingsflex.Areas.Identity.Pages.Account.Manage
             public string PhoneNumber { get; set; }
         }
 
-        private async Task LoadAsync(ratingsflexUser user)
+        private async Task LoadAsync(RatingsflexUser user)
         {
             var userName = await _userManager.GetUserNameAsync(user);
             var phoneNumber = await _userManager.GetPhoneNumberAsync(user);

@@ -1,0 +1,327 @@
+﻿@{
+    ViewData["Title"] = "Display Movie";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+@model ratingsflex.Areas.Movies.Models.DisplayMovieViewModel
+
+<div class="display-movie-container">
+    <div class="display-movie-poster">
+        <img src="@Model.PosterPath" alt="Movie Poster" style="max-width: 400px;" />
+        <p>
+            <a href="@Model.MoviePath" class="btn btn-primary">Stream Play</a> 
+            <a href="@Url.Action("DownloadMovie", "Movies", new { key = Model.MoviePath })" class="btn btn-primary">Download</a>
+
+        </p>
+    </div>
+    <div class="display-movie-details">
+        <h1>@Model.Title</h1>
+        <p>@Model.Description</p>
+        <p><span class="label-bold">Actors:</span> @string.Join(", ", Model.Actors)</p>
+        <p><span class="label-bold">Directors:</span> @string.Join(", ", Model.Directors)</p>
+        <p><span class="label-bold">Release Time:</span> @Model.ReleaseTime</p>
+        <p><span class="label-bold">Genre:</span> @Model.Genre</p>
+        <p><span class="label-bold">Total Rating:</span> <strong style="font-weight: bold; font-size: 20px;">@Model.Rating</strong>/10</p>
+        <p><span class="label-bold">Your Rating:</span>
+            <span class="stars" data-rating="0">
+                <span class="star" data-value="1">★</span>
+                <span class="star" data-value="2">★</span>
+                <span class="star" data-value="3">★</span>
+                <span class="star" data-value="4">★</span>
+                <span class="star" data-value="5">★</span>
+                <span class="star" data-value="6">★</span>
+                <span class="star" data-value="7">★</span>
+                <span class="star" data-value="8">★</span>
+                <span class="star" data-value="9">★</span>
+                <span class="star" data-value="10">★</span>
+            </span>
+            <span id="hover-rating"></span>
+        </p>
+        <p><span class="label-bold">Uploader:</span> @Model.UploaderUserId</p>
+
+    </div>
+    <div class="display-movie-comments">
+        <div class="comments-header">
+            <h2>Comments</h2>
+            <i id="add-comment-icon" class="fas fa-plus-circle" title="Add Comment"></i>
+       </div>
+        <div id="error-message-container"></div>
+        @foreach (var comment in Model.Comments)
+        {
+            <div class="comment"
+                 data-user-id="@comment.UserId"
+                 data-timestamp="@comment.Timestamp"
+                 data-can-edit="@User.Identity.Name == comment.UserId">
+                <!-- Display Mode -->
+                <div class="comment-display">
+                    <span class="comment-text">@comment.CommentText</span>
+                    <span class="comment-info">By: @comment.UserId on @comment.Timestamp</span>
+                    @if (User.Identity.Name == comment.UserId)
+                    {
+                        <button class="edit-comment-button" style="display:none;"><i class="fas fa-pencil-alt"></i></button>
+                        <button class="delete-comment-button" style="display:none;"><i class="fas fa-trash-alt"></i></button>
+                    }
+                </div>
+                <!-- Edit Mode (hidden by default) -->
+                <div class="comment-edit" style="display: none;">
+                    <input type="text" class="comment-edit-text" value="@comment.CommentText" />
+                    <button class="save-comment-button"><i class="fas fa-save"></i></button>
+                    <button class="cancel-comment-button"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+        }
+
+        <div class="add-comment-form" style="display: none;">
+            <textarea id="new-comment-text" placeholder="Write your comment here..."></textarea>
+            <button id="submit-comment" class="btn btn-primary">Add Comment</button>
+        </div>
+    </div>
+    
+    
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Toggle the add comment form and focus on the textarea when the icon is clicked
+            $('#add-comment-icon').click(function () {
+                $('.add-comment-form').slideToggle('fast', function () {
+                    if ($('.add-comment-form').is(":visible")) {
+                        $('#new-comment-text').focus();
+                    }
+                });
+            });
+
+            // Event calculation
+            $('.comment').each(function () {
+                var $this = $(this);
+                var timestamp = $this.data('timestamp');
+                var canEdit = $this.data('can-edit');
+                var commentDate = new Date(timestamp);
+                var currentDate = new Date();
+                var timeDiff = currentDate - commentDate;
+                var isLessThan24Hours = timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
+
+                if (canEdit && isLessThan24Hours) {
+                    $this.find('.edit-comment-button').show();
+                    $this.find('.delete-comment-button').show();
+                }
+            });
+
+            // Delegate the edit button click event to the document
+            $(document).on('click', '.edit-comment-button', function () {
+                var commentDiv = $(this).closest('.comment');
+                commentDiv.find('.comment-display').hide();
+                commentDiv.find('.comment-edit').show();
+            });
+
+            // Delegate the delete button click event to the document
+            $(document).on('click', '.delete-comment-button', function () {
+                var commentDiv = $(this).closest('.comment');
+                var userId = commentDiv.data('user-id');
+                var timestamp = commentDiv.data('timestamp');
+                var movieId = '@Model.MovieId';
+
+                // Confirm before deleting
+                if (confirm('Are you sure you want to delete this comment?')) {
+                    // AJAX call to delete the comment
+                    $.ajax({
+                        url: '@Url.Action("DeleteComment", "Movies")', // Update with the correct URL
+                        type: 'POST',
+                        data: {
+                            movieId: movieId,
+                            userId: userId,
+                            timestamp: timestamp
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                // Remove the comment element
+                                commentDiv.remove();
+                            } else {
+                                // Display error message
+                                $('#error-message-container').html('<div class="alert alert-danger">' + response.message + '</div>');
+                            }
+                        },
+                        error: function () {
+                            // Handle errors here
+                            $('#error-message-container').text('An error occurred while deleting the comment.');
+                        }
+                    });
+                }
+            });
+
+            // Delegate the cancel button click event to the document
+            $(document).on('click', '.cancel-comment-button', function () {
+                var commentDiv = $(this).closest('.comment');
+                commentDiv.find('.comment-edit').hide();
+                commentDiv.find('.comment-display').show();
+            });
+
+            // Delegate the save button click event to the document
+            $(document).on('click', '.save-comment-button', function () {
+                var commentDiv = $(this).closest('.comment');
+                var newCommentText = commentDiv.find('.comment-edit-text').val();
+                var userId = commentDiv.data('user-id');
+                var timestamp = commentDiv.data('timestamp');
+                var movieId = '@Model.MovieId';
+
+                // AJAX call to update the comment
+                $.ajax({
+                    url: '@Url.Action("UpdateComment", "Movies")',
+                    type: 'POST',
+                    data: {
+                        movieId: movieId,
+                        userId: userId,
+                        timestamp: timestamp,
+                        newCommentText: newCommentText
+                    },
+                    success: function (response) {
+                        commentDiv.find('.comment-text').text(newCommentText);
+                        commentDiv.find('.comment-edit').hide();
+                        commentDiv.find('.comment-display').show();
+                    },
+                    error: function (xhr, status, error) {
+                        var errorMessage = "An error occurred while updating the comment. Please try again.";
+                        $('#error-message-container').html('<div class="alert alert-danger">' + errorMessage + '</div>');
+                        setTimeout(function () {
+                            $('#error-message-container .alert').fadeOut();
+                        }, 5000);
+                    }
+                });
+            });
+
+            // Add comment functionality
+            $('#submit-comment').click(function () {
+                var newCommentText = $('#new-comment-text').val();
+                if (newCommentText) {
+                    $.ajax({
+                        url: '@Url.Action("AddComment", "Movies")',
+                        type: 'POST',
+                        data: {
+                            movieId: '@Model.MovieId',
+                            commentText: newCommentText
+                        },
+                        success: function (response) {
+                            if (response.success) {
+                                $('#new-comment-text').val('');
+                                $('.add-comment-form').slideUp();
+
+                                // Assuming response.timestamp is in ISO 8601 format
+                                var commentDate = new Date(response.timestamp);
+                                var currentDate = new Date();
+                                var timeDiff = currentDate - commentDate;
+                                var canEdit = timeDiff < 24 * 60 * 60 * 1000; // Less than 24 hours
+
+                                // Construct the new comment HTML
+                                var newCommentHtml = '<div class="comment" data-user-id="' + response.userId + '" data-timestamp="' + response.timestamp + '">' +
+                                    '<div class="comment-display">' +
+                                    '<span class="comment-text">' + newCommentText + '</span>' +
+                                    '<span class="comment-info">By: ' + response.userId + ' on ' + response.timestamp + '</span>';
+
+                                if (canEdit) {
+                                    newCommentHtml += '<button class="edit-comment-button"><i class="fas fa-pencil-alt"></i></button> <button class="delete-comment-button"> <i class="fas fa-trash-alt" > </i></button >';    
+                                }
+
+                                newCommentHtml += '</div>' +
+                                    '<div class="comment-edit" style="display: none;">' +
+                                    '<input type="text" class="comment-edit-text" value="' + newCommentText + '" />' +
+                                    '<button class="save-comment-button"><i class="fas fa-save"></i></button>' +
+                                    '<button class="cancel-comment-button"><i class="fas fa-times"></i></button>' +
+                                    '</div>' +
+                                    '</div>';
+
+                                // Append the new comment
+                                $('.display-movie-comments').append(newCommentHtml);
+                            } else {
+                                $('#error-message-container').html('<div class="alert alert-danger">' + response.message + '</div>');
+                            }
+                        },
+                        error: function () {
+                            $('#error-message-container').text('An error occurred while adding the comment.');
+                        }
+                    });
+                } else {
+                    $('#error-message-container').text('Please enter a comment.');
+                }
+            });
+
+            $('.star').hover(
+                // Handler for mouseenter
+                function () {
+                    var rating = $(this).data('value');
+                    $('#hover-rating').text(rating + ' out of 10'); // Show the rating number
+                    updateStars(rating);
+                },
+                // Handler for mouseleave
+                function () {
+                    var currentRating = $('.stars').attr('data-rating');
+                    $('#hover-rating').text(''); // Hide the rating number
+                    updateStars(currentRating);
+                }
+            );
+
+
+            //clickable rating
+            $('.star').click(function () {
+                var rating = $(this).data('value');
+
+                $('.stars').attr('data-rating', rating);
+                updateStars(rating);
+
+                // Convert rating to an integer
+                var ratingValue = parseInt(rating, 10);
+                console.log('Converted rating to number:', ratingValue);
+
+                // Optionally, send the rating to the server using AJAX
+                $.ajax({
+                    url: '@Url.Action("UpdateRating", "Movies")', // This should match the route defined in your controller
+                    type: 'POST',
+                    data: {
+                        movieId: '@Model.MovieId', 
+                        userId: '@User.Identity.Name', 
+                        userRating: ratingValue // Send the converted number
+                    },
+                    success: function (response) {
+
+                        // Handle the response from the server
+                        console.log('Server response:', response);
+
+                        var newTotalRating = response.newTotalRating;
+                        var userRating = response.userRating;
+
+                        // Update the total rating in the UI
+                        $('strong').text(newTotalRating);
+
+                        // Update the user's rating stars
+                        $('.stars').attr('data-rating', userRating);
+                        updateStars(userRating);
+
+                        // Optionally, if you want to show a message to the user
+                        alert('Rating updated successfully.');
+                    },
+                    error: function () {
+                        // Handle errors here
+                    }
+                });
+            });
+
+            function updateStars(rating) {
+                console.log('Updating stars to rating:', rating);
+                // Remove the 'gold' class from all stars
+                $('.star').removeClass('gold');
+
+                // Add the 'gold' class to stars up to the rating
+                $('.star').each(function () {
+                    if ($(this).data('value') <= rating) {
+                        $(this).addClass('gold');
+                    }
+                });
+            }
+
+
+        
+
+        });
+    </script>
+}

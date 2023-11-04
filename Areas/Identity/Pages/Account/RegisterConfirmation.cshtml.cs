@@ -18,10 +18,10 @@ namespace ratingsflex.Areas.Identity.Pages.Account
     [AllowAnonymous]
     public class RegisterConfirmationModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
         private readonly IEmailSender _sender;
 
-        public RegisterConfirmationModel(UserManager<ratingsflexUser> userManager, IEmailSender sender)
+        public RegisterConfirmationModel(UserManager<RatingsflexUser> userManager, IEmailSender sender)
         {
             _userManager = userManager;
             _sender = sender;

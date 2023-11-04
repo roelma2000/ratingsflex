@@ -19,10 +19,10 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class ForgotPasswordModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
         private readonly IEmailSender _emailSender;
 
-        public ForgotPasswordModel(UserManager<ratingsflexUser> userManager, IEmailSender emailSender)
+        public ForgotPasswordModel(UserManager<RatingsflexUser> userManager, IEmailSender emailSender)
         {
             _userManager = userManager;
             _emailSender = emailSender;

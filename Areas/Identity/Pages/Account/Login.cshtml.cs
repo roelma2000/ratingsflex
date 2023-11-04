@@ -24,11 +24,11 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class LoginModel : PageModel
     {
-        private readonly SignInManager<ratingsflexUser> _signInManager;
+        private readonly SignInManager<RatingsflexUser> _signInManager;
         private readonly ILogger<LoginModel> _logger;
         private readonly IAmazonSimpleSystemsManagement _ssmClient;
 
-        public LoginModel(SignInManager<ratingsflexUser> signInManager, ILogger<LoginModel> logger, IAmazonSimpleSystemsManagement ssmClient)
+        public LoginModel(SignInManager<RatingsflexUser> signInManager, ILogger<LoginModel> logger, IAmazonSimpleSystemsManagement ssmClient)
         {
             _signInManager = signInManager;
             _logger = logger;
@@ -165,7 +165,7 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error retrieving credentials for {username} from AWS SSM Parameter Store: {ex.Message}");
+                _logger.LogError("Error retrieving credentials for {username} from AWS SSM Parameter Store: {ex.Message}", username, ex.Message);
                 return null;
             }
         }

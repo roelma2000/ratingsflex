@@ -1,0 +1,91 @@
+﻿@{
+    ViewData["Title"] = "Browse Movies";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewData["HideCarousel"] = true;
+}
+
+@model ratingsflex.Areas.Movies.Models.BrowseMovieModel
+
+<div class="browse-movies-container">
+       @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger">
+            @TempData["ErrorMessage"]
+        </div>
+    }
+
+    <div class="manage-movies-header">
+        <h1>Browse Movies</h1>
+
+    </div>
+    <div class="browse-movies-list">
+        <div class="col-md-4">
+            <form method="get" action="@Url.Action("BrowseMovies", "Movies")" class="form-inline">
+                <label class="mr-2">Filter by Genre:</label>
+                <select id="genreDropdown" name="selectedGenre" onchange="this.form.submit()" class="form-control mr-2">
+                    <option value="All" @(Model.SelectedGenre == "All" ? "selected" : "")>All</option>
+                    <option value="Action" @(Model.SelectedGenre == "Action" ? "selected" : "")>Action</option>
+                    <option value="Comedy" @(Model.SelectedGenre == "Comedy" ? "selected" : "")>Comedy</option>
+                    <option value="Drama" @(Model.SelectedGenre == "Drama" ? "selected" : "")>Drama</option>
+                    <option value="Adventure" @(Model.SelectedGenre == "Adventure" ? "selected" : "")>Adventure</option>
+                    <option value="Animation" @(Model.SelectedGenre == "Animation" ? "selected" : "")>Animation</option>
+                    <option value="Biography" @(Model.SelectedGenre == "Biography" ? "selected" : "")>Biography</option>
+                    <option value="Crime" @(Model.SelectedGenre == "Crime" ? "selected" : "")>Crime</option>
+                    <option value="Family" @(Model.SelectedGenre == "Family" ? "selected" : "")>Family</option>
+                    <option value="Documentary" @(Model.SelectedGenre == "Documentary" ? "selected" : "")>Documentary</option>
+                    <option value="Horror" @(Model.SelectedGenre == "Horror" ? "selected" : "")>Horror</option>
+                    <option value="Musical" @(Model.SelectedGenre == "Musical" ? "selected" : "")>Musical</option>
+                    <option value="Mystery" @(Model.SelectedGenre == "Mystery" ? "selected" : "")>Mystery</option>
+                    <option value="Romance" @(Model.SelectedGenre == "Romance" ? "selected" : "")>Romance</option>
+                    <option value="Sci-Fi" @(Model.SelectedGenre == "Sci-Fi" ? "selected" : "")>Sci-Fi</option>
+                    <option value="Sport" @(Model.SelectedGenre == "Sport" ? "selected" : "")>Sport</option>
+                    <option value="Thriller" @(Model.SelectedGenre == "Thriller" ? "selected" : "")>Thriller</option>
+                    <option value="War" @(Model.SelectedGenre == "War" ? "selected" : "")>War</option>
+                    <option value="Western" @(Model.SelectedGenre == "Western" ? "selected" : "")>Western</option>
+                </select>
+                <label class="mr-2">Filter by Rating:</label>
+                <select id="ratingFilter" name="selectedRating" onchange="this.form.submit()" class="form-control">
+                    <option value="0" @(Model.SelectedRating == "0" ? "selected" : "")>All</option>
+                    <option value="9" @(Model.SelectedRating == "9" ? "selected" : "")>9+</option>
+                    <option value="8" @(Model.SelectedRating == "8" ? "selected" : "")>8+</option>
+                    <option value="7" @(Model.SelectedRating == "7" ? "selected" : "")>7+</option>
+                    <option value="6" @(Model.SelectedRating == "6" ? "selected" : "")>6+</option>
+                    <option value="5" @(Model.SelectedRating == "5" ? "selected" : "")>5+</option>
+                    <option value="4" @(Model.SelectedRating == "4" ? "selected" : "")>4+</option>
+                    <option value="3" @(Model.SelectedRating == "3" ? "selected" : "")>3+</option>
+                    <option value="2" @(Model.SelectedRating == "2" ? "selected" : "")>2+</option>
+                    <option value="1" @(Model.SelectedRating == "1" ? "selected" : "")>1+</option>
+                </select>
+            </form>
+        </div>
+    </div>
+    <div class="row" style="margin-bottom: 20px;"></div>
+
+
+    <div class="browse-movies-list">
+        @if (Model.Movies != null && Model.Movies.Count > 0)
+        {
+            foreach (var movie in Model.Movies)
+            {
+                <div class="browse-movies-item">
+                    <img src="@movie.PosterPath" alt="Movie Poster" />
+                    <div class="browse-movies-item-content">
+                        <h5 class="browse-movies-item-title">@movie.Title</h5>
+                        <p class="browse-movies-item-genre">@movie.Genre</p>
+                        <p class="browse-movies-item-rating"> @movie.Rating/10</p>
+                        <button class="browse-movies-item-button" onclick="location.href='@Url.Action("DisplayMovie", "Movies", new { movieId = movie.MovieId })'">Details</button>
+                        <div class="clearfix"></div> 
+                    </div>
+                    
+                </div>
+            }
+        }
+        else
+        {
+            <p>No movies found!</p>
+        }
+    </div>
+
+
+
+</div>

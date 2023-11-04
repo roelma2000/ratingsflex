@@ -298,3 +298,327 @@
         padding: 20px;
     }
 }
+
+/* Browse Movies Styles */
+.browse-movies-container {
+    padding: 20px;
+}
+
+.browse-movies-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* spacing between items */
+    justify-content: flex-start;
+}
+
+.browse-movies-item {
+    flex: 0 0 calc(20% - 20px); /* 5 items per row, accounting for the gap */
+    border: 2px solid #36454f; /* Changed to a darker color */
+    border-radius: 5px;
+    overflow: hidden;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+
+.browse-movies-item-content {
+    padding: 10px;
+}
+
+.browse-movies-item-title {
+    font-size: 1.2em;
+    margin-bottom: 5px;
+}
+
+.browse-movies-item-genre {
+    display: inline-block;
+    float: left;
+    font-size: 15px;
+}
+
+.browse-movies-item-rating {
+    display: inline-block;
+    float: right;
+    font-size: 15px;
+}
+
+/* Clearfix for floating elements */
+.clearfix::after {
+    content: "";
+    clear: both;
+    display: table;
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 767px) {
+
+    
+}
+
+.browse-movies-item {
+    position: relative;
+    width: 300px; /* Adjust based on your image width or desired item width */
+    min-height: 300px; /* Adjust based on your image height or desired item height */
+}
+
+    .browse-movies-item img {
+        width: 100%;
+        height: 250px; /* Set a fixed height */
+        object-fit: contain;
+        border-bottom: 12px solid #36454f; /* Changed to a darker color */
+    }
+
+.browse-movies-item-genre,
+.browse-movies-item-rating {
+    float: none;
+    display: block;
+    text-align: center;
+}
+.browse-movies-item-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: none;
+    z-index: 10;
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+.browse-movies-item:hover .browse-movies-item-button {
+    display: block;
+}
+
+/* Display Movie Styles */
+.display-movie-container {
+    display: grid;
+    grid-template-rows: auto auto; /* Two rows */
+    grid-template-columns: 1fr 2fr; /* First column takes 1/3 of space, second takes 2/3 */
+    gap: 20px; /* Spacing between rows and columns */
+    padding: 20px;
+    max-width: 1200px; /* Set a max-width for the container */
+    margin: 0 auto; /* Center the container */
+}
+
+.display-movie-poster {
+    grid-row: 1 / 2; /* First row */
+    grid-column: 1 / 2; /* First column */
+    display: flex;
+    flex-direction: column; /* Stack children vertically */
+    align-items: center; /* Center the image and button vertically */
+    border: 1px solid #cccccc; /* Add border to the poster container */
+    padding: 10px; /* Add some padding inside the border */
+}
+
+    .display-movie-poster img {
+        max-width: 90%; /* Increase the max-width to 90% of the container */
+        max-height: 90%; /* Increase the max-height to make the image larger */
+        object-fit: contain; /* Ensure the aspect ratio is maintained without cropping */
+        margin-bottom: 10px; /* Space between the image and the download button */
+    }
+
+    .display-movie-poster p {
+        width: 100%; /* Ensure the button container takes full width */
+        text-align: center; /* Center the button */
+    }
+
+.display-movie-details {
+    grid-row: 1 / 2; /* First row */
+    grid-column: 2 / 3; /* Second column */
+    border: 1px solid #cccccc; /* Add border to the details container */
+    padding: 10px; /* Add some padding inside the border */
+}
+
+.display-movie-comments {
+    grid-row: 2 / 3; /* Second row */
+    grid-column: 1 / 3; /* Span both columns */
+    border: 1px solid #cccccc; /* Add border to the comments container */
+    padding: 10px; /* Add some padding inside the border */
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 767px) {
+    .display-movie-container {
+        grid-template-rows: auto auto auto; /* Three rows */
+        grid-template-columns: 1fr; /* One column */
+    }
+
+    .display-movie-poster,
+    .display-movie-details,
+    .display-movie-comments {
+        grid-column: 1 / 2; /* Span the single column */
+        border: none; /* Remove borders on smaller screens if desired */
+    }
+
+    .display-movie-comments {
+        grid-row: 3 / 4; /* Third row */
+    }
+}
+.label-bold {
+    font-weight: bold;
+}
+
+.comment {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 0; /* Add padding to top and bottom for spacing */
+    border-bottom: 1px solid #cccccc; /* Optional: adds a separator line between comments */
+}
+
+.comment-text {
+    flex: 2; /* Allows the text to take up more space */
+    margin-right: 10px; /* Adds some space between the text and the info */
+}
+
+.comment-info {
+    flex: 1; /* Adjust the flex value as needed to allocate space */
+    color: #777; /* Optional: styles the info text */
+    font-size: 0.9em; /* Optional: reduces the size of the info text */
+}
+
+.edit-comment-link {
+    flex: 0; /* Ensures the link does not grow with the flex container */
+    color: #007bff; /* Style the link color similar to Bootstrap primary buttons */
+    text-decoration: none; /* Removes underline from the link */
+    margin-left: 10px; /* Adds some space before the edit icon */
+}
+
+    .edit-comment-link i {
+        margin-left: 5px; /* Adds space between the text and the icon */
+    }
+
+/* Style the input for editing comments */
+.comment-edit-text {
+    width: 100%; /* Take full width to allow space for editing */
+    padding: 8px; /* Add some padding for better text visibility */
+    margin-bottom: 10px; /* Space below the input field */
+    border: 1px solid #ccc; /* A subtle border */
+    border-radius: 4px; /* Rounded corners */
+}
+
+/* Style for the edit, save, and cancel buttons */
+.edit-comment-button,
+.delete-comment-button,
+.save-comment-button,
+.cancel-comment-button {
+    border: none; /* No border for a cleaner look */
+    background-color: transparent; /* No background to keep the focus on the icon */
+    cursor: pointer; /* Cursor to indicate it's clickable */
+    padding: 5px; /* Padding for clickable area */
+    margin-right: 5px; /* Space between buttons */
+    line-height: 1; /* Align the line height with the icons */
+}
+
+    /* Style for the pencil icon */
+    .edit-comment-button i {
+        cursor: pointer;
+        color: #c7860e; /* Bootstrap warning color for the pencil icon */
+    }
+
+.delete-comment-button i {
+    cursor: pointer;
+    color: #d65a5a; /* Bootstrap warning color for the pencil icon */
+}
+
+    /* Style for the save icon */
+    .save-comment-button i {
+        color: #28a745; /* Bootstrap success color for the save icon */
+    }
+
+    /* Style for the cancel icon */
+    .cancel-comment-button i {
+        color: #dc3545; /* Bootstrap danger color for the cancel icon */
+    }
+
+    /* Hover effects for the icons */
+    .edit-comment-button:hover i,
+    .save-comment-button:hover i,
+    .cancel-comment-button:hover i {
+        opacity: 0.8; /* Slight transparency on hover */
+    }
+
+/* Additional styling for the edit icon to only show on hover of the comment 
+.comment:hover .edit-comment-button {
+    visibility: visible;
+    opacity: 1;
+}*/
+
+/* Initially hide the edit button and only show it on hover for the comment owner 
+.edit-comment-button {
+    visibility: hidden;
+    opacity: 0;
+    transition: visibility 0s, opacity 0.5s ease-in-out;
+}*/
+
+
+/* Responsive design adjustments */
+@media (max-width: 768px) {
+    .comment {
+        flex-direction: column; /* Stack elements on smaller screens */
+        align-items: flex-start; /* Align items to the start */
+    }
+
+    .comment-info {
+        order: -1; /* Move info above the comment text on small screens */
+        margin-bottom: 5px; /* Space below the info */
+    }
+}
+
+.comments-header {
+    display: flex;
+    align-items: center; /* Aligns the icon vertically with the text */
+}
+
+#add-comment-icon {
+    cursor: pointer;
+    color: #007bff; /* Bootstrap primary color */
+    font-size: 1.5em; /* Larger icon size */
+    margin-left: 10px; /* Space from the header */
+}
+
+.add-comment-form {
+    display: flex;
+    flex-direction: column; /* Stack the textarea and button */
+    margin-top: 15px; /* Space from the comments header */
+    margin-bottom: 15px; /* Space before the comments list */
+}
+
+#new-comment-text {
+    min-height: 100px; /* Larger textarea size */
+    margin-bottom: 10px; /* Space between textarea and button */
+    width: 100%; /* Full width */
+    padding: 10px; /* Padding inside the textarea */
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+#submit-comment {
+    align-self: flex-start; /* Align the button to the start of the flex container */
+}
+
+.star {
+    cursor: pointer;
+    color: grey; /* default color */
+}
+
+    .star:hover,
+    .star:hover ~ .star {
+        color: grey;
+    }
+
+#hover-rating {
+    padding-left: 10px;
+    font-weight: bold;
+    vertical-align: super;
+}
+
+.gold {
+    color: gold; /* color for selected stars */
+}

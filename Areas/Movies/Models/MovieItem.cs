@@ -34,12 +34,29 @@ namespace ratingsflex.Areas.Movies.Models
         public string PosterPath { get; set; }
 
         [DynamoDBProperty("rating")]
-        public string Rating { get; set; }
+        public double Rating { get; set; }
+
+        [DynamoDBProperty("userRatings")]
+        public Dictionary<string, double> UserRatings { get; set; }
 
         [DynamoDBProperty("comments")]
-        public List<Dictionary<string, string>> Comments { get; set; }
+        public List<CommentData> Comments { get; set; }
+
 
         [DynamoDBProperty("uploaderUserId")]
         public string UploaderUserId { get; set; }
     }
+
+    public class CommentData
+    {
+        [DynamoDBProperty("commentText")]
+        public string CommentText { get; set; }
+
+        [DynamoDBProperty("timestamp")]
+        public string Timestamp { get; set; }
+
+        [DynamoDBProperty("userId")]
+        public string UserId { get; set; }
+    }
+
 }

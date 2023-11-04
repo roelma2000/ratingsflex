@@ -1,4 +1,4 @@
-﻿@inject SignInManager<ratingsflexUser> SignInManager
+﻿@inject SignInManager<RatingsflexUser> SignInManager
 @{
     var hasExternalLogins = (await SignInManager.GetExternalAuthenticationSchemesAsync()).Any();
 }

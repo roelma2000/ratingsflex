@@ -7,7 +7,7 @@ using ratingsflex.Areas.Movies.Models;
 
 namespace ratingsflex.Areas.Identity.Data;
 
-public class ApplicationDbContext : IdentityDbContext<ratingsflexUser>
+public class ApplicationDbContext : IdentityDbContext<RatingsflexUser>
 {
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
         : base(options)
@@ -31,9 +31,9 @@ public class ApplicationDbContext : IdentityDbContext<ratingsflexUser>
     public DbSet<Poster> Posters { get; set; }
 }
 
-public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<ratingsflexUser>
+public class ApplicationUserEntityConfiguration : IEntityTypeConfiguration<RatingsflexUser>
 {
-    public void Configure(EntityTypeBuilder<ratingsflexUser> builder)
+    public void Configure(EntityTypeBuilder<RatingsflexUser> builder)
     {
         builder.Property(u => u.Firstname).HasMaxLength(255);
         builder.Property(u => u.Lastname).HasMaxLength(255);

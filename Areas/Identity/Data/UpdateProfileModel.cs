@@ -9,9 +9,9 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class UpdateProfileModel : PageModel
     {
-        private readonly UserManager<ratingsflexUser> _userManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
 
-        public UpdateProfileModel(UserManager<ratingsflexUser> userManager)
+        public UpdateProfileModel(UserManager<RatingsflexUser> userManager)
         {
             _userManager = userManager;
         }

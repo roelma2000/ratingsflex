@@ -27,18 +27,18 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class RegisterModel : PageModel
     {
-        private readonly SignInManager<ratingsflexUser> _signInManager;
-        private readonly UserManager<ratingsflexUser> _userManager;
-        private readonly IUserStore<ratingsflexUser> _userStore;
-        private readonly IUserEmailStore<ratingsflexUser> _emailStore;
+        private readonly SignInManager<RatingsflexUser> _signInManager;
+        private readonly UserManager<RatingsflexUser> _userManager;
+        private readonly IUserStore<RatingsflexUser> _userStore;
+        private readonly IUserEmailStore<RatingsflexUser> _emailStore;
         private readonly ILogger<RegisterModel> _logger;
         private readonly IEmailSender _emailSender;
         private readonly IAmazonSimpleSystemsManagement _ssmClient;
 
         public RegisterModel(
-            UserManager<ratingsflexUser> userManager,
-            IUserStore<ratingsflexUser> userStore,
-            SignInManager<ratingsflexUser> signInManager,
+            UserManager<RatingsflexUser> userManager,
+            IUserStore<RatingsflexUser> userStore,
+            SignInManager<RatingsflexUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender, 
             IAmazonSimpleSystemsManagement ssmClient)
@@ -196,34 +196,34 @@ namespace ratingsflex.Areas.Identity.Pages.Account
             try
             {
                 var response = _ssmClient.PutParameterAsync(request).Result;
-                _logger.LogInformation($"Successfully saved credentials for {username} in AWS SSM Parameter Store.");
+                _logger.LogInformation("Successfully saved credentials for {username} in AWS SSM Parameter Store.", username);
             }
             catch (Exception ex)
             {
                 _logger.LogError($"Error saving credentials for {username} in AWS SSM Parameter Store: {ex.Message}");
             }
         }
-        private ratingsflexUser CreateUser()
+        private RatingsflexUser CreateUser()
         {
             try
             {
-                return Activator.CreateInstance<ratingsflexUser>();
+                return Activator.CreateInstance<RatingsflexUser>();
             }
             catch
             {
-                throw new InvalidOperationException($"Can't create an instance of '{nameof(ratingsflexUser)}'. " +
-                    $"Ensure that '{nameof(ratingsflexUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
+                throw new InvalidOperationException($"Can't create an instance of '{nameof(RatingsflexUser)}'. " +
+                    $"Ensure that '{nameof(RatingsflexUser)}' is not an abstract class and has a parameterless constructor, or alternatively " +
                     $"override the register page in /Areas/Identity/Pages/Account/Register.cshtml");
             }
         }
 
-        private IUserEmailStore<ratingsflexUser> GetEmailStore()
+        private IUserEmailStore<RatingsflexUser> GetEmailStore()
         {
             if (!_userManager.SupportsUserEmail)
             {
                 throw new NotSupportedException("The default UI requires a user store with email support.");
             }
-            return (IUserEmailStore<ratingsflexUser>)_userStore;
+            return (IUserEmailStore<RatingsflexUser>)_userStore;
         }
     }
 }

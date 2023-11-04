@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using ratingsflex.Areas.Movies.Models;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace ratingsflex.Areas.Movies.Data
@@ -8,5 +9,8 @@ namespace ratingsflex.Areas.Movies.Data
 
         Task<string> UploadFileAsync(IFormFile file, string bucketName);
         Task DeleteFileAsync(string fileKey, string bucketName);
+        string GeneratePreSignedURL(string key, string bucketName, TimeSpan expiryDuration);
+
+        Task<Stream> GetFileAsync(string key, string bucketName);
     }
 }

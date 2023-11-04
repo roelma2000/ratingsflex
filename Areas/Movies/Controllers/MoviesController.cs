@@ -6,6 +6,8 @@ using System;
 using Microsoft.AspNetCore.Http;
 using ratingsflex.Areas.Identity.Data;
 using System.Diagnostics;
+using Newtonsoft.Json;
+using System.Net;
 
 namespace ratingsflex.Areas.Movies.Controllers
 {
@@ -16,6 +18,12 @@ namespace ratingsflex.Areas.Movies.Controllers
         private readonly IS3Service _s3Service;
         private readonly ApplicationDbContext _context;
 
+        private const string S3MovieBucket = "ratingsflexmovies";
+        private const string S3PosterBucket = "ratingsflexposters";
+        private const string MovieURL = $"https://{S3MovieBucket}.s3.ca-central-1.amazonaws.com";
+        private const string PosterURL = $"https://{S3PosterBucket}.s3.ca-central-1.amazonaws.com";
+        private const string DefaultMovie = "time.mp4";
+        private const string DefaultPoster = "defaultposter.png";
 
         public MoviesController(ApplicationDbContext context, IDynamoDbService dynamoDbService, ILogger<MoviesController> logger, IS3Service s3Service)
         {
@@ -25,9 +33,9 @@ namespace ratingsflex.Areas.Movies.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> ManageMovies(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> ManageMovies(string selectedGenre = "All", string selectedRating = "0", int page = 1, int pageSize = 10)
         {
-            var (movies, totalItems) = await _dynamoDbService.GetMoviesByUploaderUserId(User.Identity.Name, page, pageSize);
+            var (movies, totalItems) = await _dynamoDbService.GetMoviesByUploaderUserId(User.Identity.Name, selectedGenre, selectedRating, page, pageSize);
             var viewModel = new ManageMoviesViewModel
             {
                 Movies = movies,
@@ -36,12 +44,33 @@ namespace ratingsflex.Areas.Movies.Controllers
                     CurrentPage = page,
                     PageSize = pageSize,
                     TotalItems = totalItems
-                }
+                },
+                SelectedGenre = selectedGenre, // Pass the selected genre to the view
+                SelectedRating = selectedRating// Pass the selected genre to the view
             };
 
             return View("~/Areas/Movies/Views/ManageMovies.cshtml", viewModel);
-
         }
+
+        public async Task<IActionResult> BrowseMovies(string selectedGenre = "All", string selectedRating = "0", int page = 1, int pageSize = 10)
+        {
+            var (movies, totalItems) = await _dynamoDbService.GetAllMovies(selectedGenre, selectedRating, page, pageSize);
+            var viewModel = new BrowseMovieModel
+            {
+                Movies = movies,
+                Pagination = new PaginationModel
+                {
+                    CurrentPage = page,
+                    PageSize = pageSize,
+                    TotalItems = totalItems
+                },
+                SelectedGenre = selectedGenre,
+                SelectedRating = selectedRating// Pass the selected genre to the view
+            };
+
+            return View("~/Areas/Movies/Views/BrowseMovies.cshtml", viewModel);
+        }
+
 
         [HttpGet]
         [Route("Movies/GetAvailableMovies")]
@@ -91,17 +120,11 @@ namespace ratingsflex.Areas.Movies.Controllers
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 _logger.LogInformation("==================================================================================");
-                _logger.LogError("Validation errors: " + string.Join(", ", errors));
+                _logger.LogError("Validation errors: {Errors}", string.Join(", ", errors));
                 _logger.LogInformation("There was an error with your submission. Please check the form and try again.");
                 _logger.LogInformation("==================================================================================");
                 return View("~/Areas/Movies/Views/AddMovie.cshtml", model);
             }
-            var S3MovieBucket = "ratingsflexmovies";
-            var S3PosterBucket = "ratingsflexposters";
-            var MovieURL = $"https://{S3MovieBucket}.s3.ca-central-1.amazonaws.com";
-            var PosterURL = $"https://{S3PosterBucket}.s3.ca-central-1.amazonaws.com";
-            var DefaultMovie = "time.mp4";
-            var DefaultPoster = "defaultposter.png";
 
             var MovieFile = model.MovieFile;
             var PosterFile = model.PosterFile;
@@ -129,8 +152,9 @@ namespace ratingsflex.Areas.Movies.Controllers
                 UploaderUserId = User.Identity.Name, // uploader's user ID from the logged-in user
                 Actors = model.Actors?.ToList() ?? new List<string>(),
                 Directors = model.Directors?.ToList() ?? new List<string>(),
-                Rating = "0", // Initialize rating to 0
-                Comments = new List<Dictionary<string, string>>() // Initialize comments to empty list
+                Rating = 0.0, // Initialize rating to 0
+                UserRatings = new Dictionary<string, double>(), // Initialize user ratings to empty dictionary
+                Comments = new List<CommentData>() // Initialize comments 
             };
 
             // Save movie record to DynamoDB
@@ -143,32 +167,22 @@ namespace ratingsflex.Areas.Movies.Controllers
                 var movieRecord = _context.Movies.FirstOrDefault(m => m.FileName == MovieFile);
                 if (movieRecord != null)
                 {
-                    _context.Movies.Remove(movieRecord);
-                    _context.SaveChanges();
-
                     movieRecord.DynamoDBId = movieId;
                     movieRecord.IsAssigned = true;
-
-                    _context.Movies.Add(movieRecord);
                     _context.SaveChanges();
                 }
 
                 var posterRecord = _context.Posters.FirstOrDefault(p => p.FileName == PosterFile);
                 if (posterRecord != null)
                 {
-                    _context.Posters.Remove(posterRecord);
-                    _context.SaveChanges();
-
                     posterRecord.DynamoDBId = movieId;
                     posterRecord.IsAssigned = true;
-
-                    _context.Posters.Add(posterRecord);
                     _context.SaveChanges();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError($"Error adding movie {movie.Title}: {ex.Message}");
+                _logger.LogError("Error adding movie {MovieTitle}: {ErrorMessage}", movie.Title, ex.Message);
                 TempData["Notification"] = $"Error adding movie {movie.Title}.";
                 return RedirectToAction("ManageMovies");
             }
@@ -178,6 +192,95 @@ namespace ratingsflex.Areas.Movies.Controllers
             return RedirectToAction("ManageMovies");
         }
 
+        //******************** Edit Movie ******************
+        public async Task<IActionResult> EditMovie(string movieId)
+        {
+            var movie = await _dynamoDbService.GetMovieByMovieId(movieId);
+
+            var viewModel = new EditMovieViewModel
+            {
+                MovieId = movie.MovieId,
+                Title = movie.Title,
+                Description = movie.Description,
+                ReleaseTime = movie.ReleaseTime,
+                Genre = movie.Genre,
+                Actors = movie.Actors,
+                Directors = movie.Directors,
+                MovieFile = movie.MoviePath,
+                PosterFile = movie.PosterPath
+            };
+
+            _logger.LogInformation($"Model being sent to view: {JsonConvert.SerializeObject(viewModel)}");
+            return View("~/Areas/Movies/Views/EditMovie.cshtml", viewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> EditMovie(EditMovieViewModel model)
+        {
+            // 1. Retrieve the existing movie item from the database
+            var existingMovie = await _dynamoDbService.GetMovieByMovieId(model.MovieId);
+
+            if (existingMovie == null)
+            {
+                TempData["Notification"] = $"Movie {model.Title} not found in DynamoDB.";
+                return View("~/Areas/Movies/Views/EditMovie.cshtml");
+            }
+
+            // 2. Extract the Filename from Movie and Poster Path/URL
+            var oldMovieFile = Path.GetFileName(existingMovie.MoviePath);
+            var oldPosterFile = Path.GetFileName(existingMovie.PosterPath);
+
+            // 3. Update the properties of the existing movie item with values from the model
+            existingMovie.Title = model.Title;
+            existingMovie.Description = model.Description;
+            existingMovie.ReleaseTime = model.ReleaseTime;
+            existingMovie.Genre = model.Genre;
+            existingMovie.Actors = model.Actors;
+            existingMovie.Directors = model.Directors;
+
+            // 4. Update the existing Movie and Poster Path based on new file
+            existingMovie.MoviePath = $"{MovieURL}/{model.MovieFile}";
+            existingMovie.PosterPath = $"{PosterURL}/{model.PosterFile}";
+
+            // 5. Save the updated movie item back to the Dynamo database
+            await _dynamoDbService.UpdateMovie(existingMovie);
+
+            // 6. Update SQL Server database Files
+            //Free-up old files
+            var movieRecord = _context.Movies.FirstOrDefault(m => m.FileName == oldMovieFile);
+            if (movieRecord != null)
+            {
+                movieRecord.IsAssigned = false;
+                _context.SaveChanges();
+            }
+
+            var newMovieRecord = _context.Movies.FirstOrDefault(m => m.FileName == model.MovieFile);
+            if (newMovieRecord != null)
+            {
+                newMovieRecord.IsAssigned = true;
+                _context.SaveChanges();
+            }
+
+            var posterRecord = _context.Posters.FirstOrDefault(p => p.FileName == oldPosterFile);
+            if (posterRecord != null)
+            {
+                posterRecord.IsAssigned = false;
+                _context.SaveChanges();
+            }
+
+            var newPosterRecord = _context.Posters.FirstOrDefault(p => p.FileName == model.PosterFile);
+            if (newPosterRecord != null)
+            {
+                newPosterRecord.IsAssigned = true;
+                _context.SaveChanges();
+            }
+
+            // Redirect to ManageMovies
+            return RedirectToAction("ManageMovies");
+        }
+
+
+        //**************************************************
         [HttpPost]
         public async Task<IActionResult> DeleteMovie(string movieId, string releaseTime)
         {
@@ -208,89 +311,7 @@ namespace ratingsflex.Areas.Movies.Controllers
             }
         }
 
-        [HttpPost]
-        public async Task<IActionResult> AddComment(string movieId, string commentText)
-        {
-            if (string.IsNullOrEmpty(commentText))
-            {
-                return new JsonResult(new { success = false, message = "Comment text cannot be empty." });
-            }
-
-            var movie = await _dynamoDbService.GetMovieByMovieId(movieId);
-            if (movie == null)
-            {
-                return new JsonResult(new { success = false, message = "Movie not found." });
-            }
-
-            var comment = new Dictionary<string, string>
-    {
-        { "commentText", commentText },
-        { "userId", User.Identity.Name },
-        { "timestamp", DateTime.UtcNow.ToString("o") }
-    };
-
-            movie.Comments.Add(comment);
-
-            try
-            {
-                await _dynamoDbService.UpdateMovie(movie);
-                return new JsonResult(new { success = true, message = "Comment added successfully." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error adding comment to movie {movie.Title}: {ex.Message}");
-                return new JsonResult(new { success = false, message = "Failed to add comment. Please try again." });
-            }
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> EditComment(string movieId, int commentIndex, string newCommentText)
-        {
-            if (string.IsNullOrEmpty(newCommentText))
-            {
-                return new JsonResult(new { success = false, message = "Comment text cannot be empty." });
-            }
-
-            var movie = await _dynamoDbService.GetMovieByMovieId(movieId);
-            if (movie == null)
-            {
-                return new JsonResult(new { success = false, message = "Movie not found." });
-            }
-
-            if (commentIndex < 0 || commentIndex >= movie.Comments.Count)
-            {
-                return new JsonResult(new { success = false, message = "Invalid comment index." });
-            }
-
-            var comment = movie.Comments[commentIndex];
-            var userId = comment["userId"];
-            var timestamp = DateTime.Parse(comment["timestamp"]);
-
-            if (User.Identity.Name != userId)
-            {
-                return new JsonResult(new { success = false, message = "You can only edit your own comments." });
-            }
-
-            if ((DateTime.UtcNow - timestamp).TotalHours > 24)
-            {
-                return new JsonResult(new { success = false, message = "You can only edit comments within 24 hours of posting." });
-            }
-
-            comment["commentText"] = newCommentText;
-            comment["timestamp"] = DateTime.UtcNow.ToString("o");
-
-            try
-            {
-                await _dynamoDbService.UpdateMovie(movie);
-                return new JsonResult(new { success = true, message = "Comment edited successfully." });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Error editing comment on movie {movie.Title}: {ex.Message}");
-                return new JsonResult(new { success = false, message = "Failed to edit comment. Please try again." });
-            }
-        }
-
+    
         public IActionResult UploadMovie()
         {
             _logger.LogInformation("UploadMovie method called");
@@ -306,7 +327,7 @@ namespace ratingsflex.Areas.Movies.Controllers
             {
                 var errors = ModelState.Values.SelectMany(v => v.Errors).Select(e => e.ErrorMessage);
                 _logger.LogInformation("==================================================================================");
-                _logger.LogError("Validation errors: " + string.Join(", ", errors));
+                _logger.LogError("Validation errors: {Errors}", string.Join(", ", errors));
                 _logger.LogInformation("There was an error with your submission. Please check the form and try again.");
                 _logger.LogInformation("==================================================================================");
                 return View("~/Areas/Movies/Views/Upload.cshtml", model);
@@ -376,7 +397,7 @@ namespace ratingsflex.Areas.Movies.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteMovieAndPosterFile(int id)
         {
-            _logger.LogInformation($"\nDeleteMovieAndPosterFile method called with id: {id}\n");
+            _logger.LogInformation("\nDeleteMovieAndPosterFile method called with id: {Id}\n", id);
             // Find the movie and poster by id
             var movie = _context.Movies.FirstOrDefault(m => m.Id == id);
             var poster = _context.Posters.FirstOrDefault(p => p.MovieId == id);
@@ -400,7 +421,239 @@ namespace ratingsflex.Areas.Movies.Controllers
             return RedirectToAction("ManageFiles");
         }
 
+        public async Task<IActionResult> DisplayMovie(string movieId)
+        {
+            var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+            if (movieItem == null)
+            {
+                return NotFound();
+            }
 
+            var displayMovieViewModel = new DisplayMovieViewModel
+            {
+                MovieId = movieItem.MovieId,
+                Title = movieItem.Title,
+                Description = movieItem.Description,
+                Actors = movieItem.Actors,
+                Directors = movieItem.Directors,
+                ReleaseTime = movieItem.ReleaseTime,
+                Genre = movieItem.Genre,
+                Rating = movieItem.Rating.ToString(),
+                PosterPath = movieItem.PosterPath,
+                MoviePath = movieItem.MoviePath,
+                UploaderUserId = movieItem.UploaderUserId,
+                Comments = movieItem.Comments.Select(c => new CommentItem
+                {
+                    CommentText = c.CommentText,
+                    Timestamp = c.Timestamp,
+                    UserId = c.UserId
+                }).ToList()
+            };
+
+            return View("~/Areas/Movies/Views/DisplayMovie.cshtml", displayMovieViewModel);
+        }
+
+        [HttpGet]
+        [Route("Movies/DownloadMovie")]
+        public async Task<IActionResult> DownloadMovie(string key)
+        {
+            // Decode the key in case it's URL-encoded
+            key = WebUtility.UrlDecode(key);
+
+            // Extract the filename from the key
+            var uri = new Uri(key);
+            var fileName = Path.GetFileName(uri.LocalPath);
+
+            // Use the constant for the bucket name and the extracted filename
+            var stream = await _s3Service.GetFileAsync(fileName, S3MovieBucket);
+            if (stream == null)
+            {
+                return NotFound("The file was not found.");
+            }
+
+            var contentType = "application/octet-stream";
+            // The 'File' method returns a FileResult object which will prompt the browser to download the file
+            return File(stream, contentType, fileName);
+        }
+
+
+        [HttpPost]
+        public async Task<ActionResult> UpdateComment(string movieId, string userId, string timestamp, string newCommentText)
+        {
+            try
+            {
+                // Retrieve the movie item from DynamoDB using the GetMovieDetails method
+                var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+
+                if (movieItem == null)
+                {
+                    return Json(new { success = false, message = "Movie not found." });
+                }
+
+                // Serialize the movieItem to a JSON string for logging
+                //string movieItemJson = JsonConvert.SerializeObject(movieItem, Formatting.Indented);
+                //_logger.LogInformation("\nMovieItem details: {MovieItemJson}\n", movieItemJson);
+
+                // Find the comment to update
+                var commentToUpdate = movieItem.Comments.FirstOrDefault(c => c.UserId == userId && c.Timestamp == timestamp);
+                if (commentToUpdate == null)
+                {
+                    return Json(new { success = false, message = "Comment not found." });
+                }
+
+                // Update the comment text
+                commentToUpdate.CommentText = newCommentText;
+
+                // Save the updated movie item back to DynamoDB using the UpdateMovie method
+                await _dynamoDbService.UpdateMovie(movieItem);
+
+                // Return a success response
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error updating comment: {Message}", ex.Message);
+                return Json(new { success = false, message = "An error occurred while updating the comment." });
+            }
+        }
+
+
+        [HttpPost]
+        public async Task<ActionResult> AddComment(string movieId, string commentText)
+        {
+            if (string.IsNullOrEmpty(commentText))
+            {
+                return Json(new { success = false, message = "Comment text cannot be empty." });
+            }
+
+            try
+            {
+                // Retrieve the movie item from DynamoDB
+                var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+                if (movieItem == null)
+                {
+                    return Json(new { success = false, message = "Movie not found." });
+                }
+
+                // Create a new comment object of type CommentData
+                var newComment = new CommentData
+                {
+                    UserId = User.Identity.Name, // Or another way to identify the user
+                    CommentText = commentText,
+                    Timestamp = DateTime.UtcNow.ToString("o") // ISO 8601 format
+                };
+
+                // Add the new comment to the movie item
+                movieItem.Comments.Add(newComment);
+
+                // Save the updated movie item back to DynamoDB
+                await _dynamoDbService.UpdateMovie(movieItem);
+
+                // Return the userId and timestamp in the response
+                return Json(new { success = true, userId = User.Identity.Name, timestamp = newComment.Timestamp });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Error adding comment: {Message}", ex.Message);
+                return Json(new { success = false, message = "An error occurred while adding the comment." });
+            }
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> DeleteComment(string movieId, string userId, string timestamp)
+        {
+            if (string.IsNullOrEmpty(movieId) || string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(timestamp))
+            {
+                return Json(new { success = false, message = "Invalid parameters." });
+            }
+
+            try
+            {
+                // Retrieve the movie item from the data store
+                var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+                if (movieItem == null)
+                {
+                    return Json(new { success = false, message = "Movie not found." });
+                }
+
+                // Find the comment based on the timestamp and user ID
+                var commentToDelete = movieItem.Comments.FirstOrDefault(c => c.UserId == userId && c.Timestamp == timestamp);
+                if (commentToDelete == null)
+                {
+                    return Json(new { success = false, message = "Comment not found." });
+                }
+
+                // Check if the comment is less than 24 hours old
+                var commentDate = DateTime.Parse(commentToDelete.Timestamp);
+                if ((DateTime.UtcNow - commentDate).TotalHours > 24)
+                {
+                    return Json(new { success = false, message = "Comments can only be deleted within 24 hours of posting." });
+                }
+
+                // Remove the comment from the list
+                movieItem.Comments.Remove(commentToDelete);
+
+                // Save the updated movie item back to the data store
+                await _dynamoDbService.UpdateMovie(movieItem);
+
+                return Json(new { success = true, message = "Comment deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                _logger.LogError("Error deleting comment: {Message}", ex.Message);
+                return Json(new { success = false, message = "An error occurred while deleting the comment." });
+            }
+        }
+
+
+        [HttpPost]
+        [Route("Movies/UpdateRating")]
+        public async Task<IActionResult> UpdateUserRatingAndOverallRating(string movieId, string userId, int userRating)
+        {
+            _logger.LogInformation("\nReceived rating: {Rating} for movie: {MovieId} by user: {UserId}\n", userRating, movieId, userId);
+            try
+            {
+                // Retrieve the current movie item
+                var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+                if (movieItem == null)
+                {
+                    // Handle the case where the movie does not exist
+                    return Json(new { success = false, message = "Movie does not exist." });
+                }
+
+                // Check if the userId already exists in userRatings and update or add the rating
+                if (movieItem.UserRatings.ContainsKey(userId))
+                {
+                    // Update the existing rating
+                    movieItem.UserRatings[userId] = userRating;
+                }
+                else
+                {
+                    // Add a new rating record
+                    movieItem.UserRatings.Add(userId, userRating);
+                }
+
+                // Calculate the new overall rating
+                var totalRating = movieItem.UserRatings.Values.Sum();
+                var numberOfRatings = movieItem.UserRatings.Count;
+                var overallRating = (double)totalRating / numberOfRatings;
+
+                // Update the overall rating field
+                movieItem.Rating = Math.Round(overallRating, 1); // Assuming Rating is a double. Round to 1 decimal place or as needed.
+
+                // Save the updated movie item back to DynamoDB
+                await _dynamoDbService.UpdateMovie(movieItem);
+                //return true;
+                return Json(new { success = true, userRating = userRating, newTotalRating = movieItem.Rating });
+            }
+            catch (Exception ex)
+            {
+                // Log the exception
+                _logger.LogError("Error updating user rating and overall rating: {Message}", ex.Message);
+                return Json(new { success = false, message = "Error updating user rating and overall rating: {Message}", ex.Message });
+            }
+        }
 
     }
 }

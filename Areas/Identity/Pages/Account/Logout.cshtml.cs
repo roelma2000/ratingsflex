@@ -15,10 +15,10 @@ namespace ratingsflex.Areas.Identity.Pages.Account
 {
     public class LogoutModel : PageModel
     {
-        private readonly SignInManager<ratingsflexUser> _signInManager;
+        private readonly SignInManager<RatingsflexUser> _signInManager;
         private readonly ILogger<LogoutModel> _logger;
 
-        public LogoutModel(SignInManager<ratingsflexUser> signInManager, ILogger<LogoutModel> logger)
+        public LogoutModel(SignInManager<RatingsflexUser> signInManager, ILogger<LogoutModel> logger)
         {
             _signInManager = signInManager;
             _logger = logger;

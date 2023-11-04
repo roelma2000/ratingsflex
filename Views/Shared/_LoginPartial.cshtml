@@ -1,24 +1,28 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using ratingsflex.Areas.Identity.Data
 
-@inject SignInManager<ratingsflexUser> SignInManager
-@inject UserManager<ratingsflexUser> UserManager
+@inject SignInManager<RatingsflexUser> SignInManager
+@inject UserManager<RatingsflexUser> UserManager
 
 @inherits Microsoft.AspNetCore.Mvc.RazorPages.Page
 @{
     var returnUrl = ViewContext.HttpContext.Request.Query["returnUrl"];
 }
 
+
 <ul class="navbar-nav">
     @if (SignInManager.IsSignedIn(User))
     {
         var user = await UserManager.GetUserAsync(User);
+       
         <li class="nav-item">
             <a id="manage" class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @user.Firstname @user.Lastname!</a>
         </li>
+
         <li class="nav-item">
             <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="ManageMovies">Manage Movies</a>
         </li>
+        
         <li class="nav-item">
             <form id="logoutForm" class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
                 <button id="logout" type="submit" class="nav-link btn btn-link text-dark">Logout</button>
