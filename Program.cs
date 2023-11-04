@@ -10,14 +10,21 @@ using Amazon.SimpleSystemsManagement.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Http.Features;
 
+using Microsoft.Data.SqlClient;
+
 namespace ratingsflex
 {
     public class Program
     {
         public static void Main(string[] args)
         {
+
+            //Add Environment profile variable, this is required for deployment to work!!
+            Environment.SetEnvironmentVariable("AWS_PROFILE", "lab1sanjayProfile");
+
+
             var builder = WebApplication.CreateBuilder(args);
-            var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
+            //var connectionString = builder.Configuration.GetConnectionString("ApplicationDbContextConnection") ?? throw new InvalidOperationException("Connection string 'ApplicationDbContextConnection' not found.");
 
             // Configure services
             builder.Services.Configure<FormOptions>(options =>
@@ -25,7 +32,17 @@ namespace ratingsflex
                 options.MultipartBodyLengthLimit = 2_147_483_648; // 2GB
             });
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+            //builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
+
+            //reading RDS credentials from parameter store
+            builder.Configuration.AddSystemsManager("/MvcMovie", new Amazon.Extensions.NETCore.Setup.AWSOptions { Region = RegionEndpoint.CACentral1 });
+
+            var connectionString = new SqlConnectionStringBuilder(builder.Configuration.GetConnectionString("ApplicationDbContextConnection"));
+            connectionString.UserID = builder.Configuration["DbUser"];
+            connectionString.Password = builder.Configuration["DbPassword"];
+            builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString.ConnectionString));
+
+
 
             builder.Services.AddDefaultIdentity<RatingsflexUser>(options => options.SignIn.RequireConfirmedAccount = false)
                 .AddEntityFrameworkStores<ApplicationDbContext>();

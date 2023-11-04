@@ -18,8 +18,8 @@ namespace ratingsflex.Areas.Movies.Controllers
         private readonly IS3Service _s3Service;
         private readonly ApplicationDbContext _context;
 
-        private const string S3MovieBucket = "ratingsflexmovies";
-        private const string S3PosterBucket = "ratingsflexposters";
+        private const string S3MovieBucket = "ratingsflexmovies1";
+        private const string S3PosterBucket = "ratingsflexposters1";
         private const string MovieURL = $"https://{S3MovieBucket}.s3.ca-central-1.amazonaws.com";
         private const string PosterURL = $"https://{S3PosterBucket}.s3.ca-central-1.amazonaws.com";
         private const string DefaultMovie = "time.mp4";
@@ -335,8 +335,8 @@ namespace ratingsflex.Areas.Movies.Controllers
 
             try
             {
-                var movieFileName = await _s3Service.UploadFileAsync(model.MovieFile, "ratingsflexmovies");
-                var posterFileName = await _s3Service.UploadFileAsync(model.PosterFile, "ratingsflexposters");
+                var movieFileName = await _s3Service.UploadFileAsync(model.MovieFile, "ratingsflexmovies1");
+                var posterFileName = await _s3Service.UploadFileAsync(model.PosterFile, "ratingsflexposters1");
 
                 var movie = new Movie
                 {
@@ -411,8 +411,8 @@ namespace ratingsflex.Areas.Movies.Controllers
             }
 
             // Delete the movie and poster files from S3 buckets
-            await _s3Service.DeleteFileAsync(movie.FileName, "ratingsflexmovies");
-            await _s3Service.DeleteFileAsync(poster.FileName, "ratingsflexposters");
+            await _s3Service.DeleteFileAsync(movie.FileName, "ratingsflexmovies1");
+            await _s3Service.DeleteFileAsync(poster.FileName, "ratingsflexposters1");
 
             // Delete the movie and poster records from the database
             _context.Movies.Remove(movie);
