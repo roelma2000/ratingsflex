@@ -603,10 +603,7 @@
     align-self: flex-start; /* Align the button to the start of the flex container */
 }
 
-.star {
-    cursor: pointer;
-    color: grey; /* default color */
-}
+
 
     .star:hover,
     .star:hover ~ .star {
@@ -621,4 +618,17 @@
 
 .gold {
     color: gold; /* color for selected stars */
+}
+
+.star {
+    cursor: pointer;
+    color: grey; /* default color */
+}
+
+.star.gold {
+    color: gold; /* color for stars that represent the user's rating */
+}
+
+.display-movie-details .stars .star.gold {
+    color: gold;
 }

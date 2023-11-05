@@ -426,9 +426,15 @@ namespace ratingsflex.Areas.Movies.Controllers
         public async Task<IActionResult> DisplayMovie(string movieId)
         {
             var movieItem = await _dynamoDbService.GetMovieDetails(movieId);
+            string currentUserEmail = User.Identity.Name;
             if (movieItem == null)
             {
                 return NotFound();
+            }
+            int currentUserRating = 0;
+            if (movieItem.UserRatings != null && movieItem.UserRatings.ContainsKey(currentUserEmail))
+            {
+                currentUserRating = (int)movieItem.UserRatings[currentUserEmail];
             }
 
             var displayMovieViewModel = new DisplayMovieViewModel
@@ -449,7 +455,8 @@ namespace ratingsflex.Areas.Movies.Controllers
                     CommentText = c.CommentText,
                     Timestamp = c.Timestamp,
                     UserId = c.UserId
-                }).ToList()
+                }).ToList(),
+                UserRating = currentUserRating
             };
 
             return View("~/Areas/Movies/Views/DisplayMovie.cshtml", displayMovieViewModel);

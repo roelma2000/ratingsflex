@@ -23,21 +23,18 @@
         <p><span class="label-bold">Release Time:</span> @Model.ReleaseTime</p>
         <p><span class="label-bold">Genre:</span> @Model.Genre</p>
         <p><span class="label-bold">Total Rating:</span> <strong style="font-weight: bold; font-size: 20px;">@Model.Rating</strong>/10</p>
-        <p><span class="label-bold">Your Rating:</span>
-            <span class="stars" data-rating="0">
-                <span class="star" data-value="1">★</span>
-                <span class="star" data-value="2">★</span>
-                <span class="star" data-value="3">★</span>
-                <span class="star" data-value="4">★</span>
-                <span class="star" data-value="5">★</span>
-                <span class="star" data-value="6">★</span>
-                <span class="star" data-value="7">★</span>
-                <span class="star" data-value="8">★</span>
-                <span class="star" data-value="9">★</span>
-                <span class="star" data-value="10">★</span>
+        <p>
+            <!--  <p>User Rating: @Model.UserRating</p>  This is just for debugging -->
+            <span class="label-bold">Your Rating:</span>
+            <span class="stars" data-rating="@Model.UserRating">
+                @for (int i = 1; i <= 10; i++)
+                {
+                    <span class="star @(i <= Model.UserRating ? "gold" : "")" data-value="@i">★</span>
+                }
             </span>
             <span id="hover-rating"></span>
         </p>
+
         <p><span class="label-bold">Uploader:</span> @Model.UploaderUserId</p>
 
     </div>
@@ -84,6 +81,12 @@
 @section Scripts {
     <script>
         $(document).ready(function () {
+
+            // Set the initial rating
+            var initialRating = $('.stars').data('rating');
+            updateStars(initialRating);
+
+            console.log("Update stars triggered using initialRating: {initialRating}", initialRating);
             // Toggle the add comment form and focus on the textarea when the icon is clicked
             $('#add-comment-icon').click(function () {
                 $('.add-comment-form').slideToggle('fast', function () {
