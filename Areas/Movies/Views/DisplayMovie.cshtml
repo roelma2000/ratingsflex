@@ -86,7 +86,6 @@
             var initialRating = $('.stars').data('rating');
             updateStars(initialRating);
 
-            console.log("Update stars triggered using initialRating: {initialRating}", initialRating);
             // Toggle the add comment form and focus on the textarea when the icon is clicked
             $('#add-comment-icon').click(function () {
                 $('.add-comment-form').slideToggle('fast', function () {
@@ -274,7 +273,6 @@
 
                 // Convert rating to an integer
                 var ratingValue = parseInt(rating, 10);
-                console.log('Converted rating to number:', ratingValue);
 
                 // Optionally, send the rating to the server using AJAX
                 $.ajax({
@@ -288,7 +286,6 @@
                     success: function (response) {
 
                         // Handle the response from the server
-                        console.log('Server response:', response);
 
                         var newTotalRating = response.newTotalRating;
                         var userRating = response.userRating;
@@ -310,7 +307,6 @@
             });
 
             function updateStars(rating) {
-                console.log('Updating stars to rating:', rating);
                 // Remove the 'gold' class from all stars
                 $('.star').removeClass('gold');
 
